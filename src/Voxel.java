@@ -1,13 +1,10 @@
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Nkosi Gumede
  */
+
 public class Voxel {
-    public List<Voxel> neighbours = new ArrayList<Voxel>();
     public String normalDirection;
-    public int accessibilityValue;
+    public double accessibilityValue;
     //voxel co-ordinates...
     public int x, y, z;
     

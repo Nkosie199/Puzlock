@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -27,6 +28,8 @@ public class Puzlock {
         pickSeedVoxel(inputVoxelizedMesh);
         //1.2. Compute voxel accessibility
         computeVoxelAccessibility();
+        //1.3. Ensure blocking and mobility
+        ensureBlockingMobility();
     }
 
     //0. Read/initialize the 3D grid
@@ -97,32 +100,32 @@ public class Puzlock {
         for (Voxel v: voxels){
             if (v.y == inputVoxelizedMeshSize){
                 //i.e. if voxel is at the top
-                if (v.x == 0){
-                    //and at the left end...
-                    exteriorVoxels.add(v); //these voxels should have met the requirement of being able to move out of the puzzle in one movement
+                if (getLeft(v.x,v.y,v.z) == null){
+                    //and if the 3D array has 0 or null at the left co-ordinate of that voxel...
+                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "left";
-                    System.out.println(i+") Added exterior voxel: "+v+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
-                if (v.x == inputVoxelizedMeshSize){
-                    //and at the right end...
-                    exteriorVoxels.add(v); //these voxels should have met the requirement of being able to move out of the puzzle in one movement
+                if (getRight(v.x,v.y,v.z) == null){
+                    //and if the 3D array has 0 or null at the right co-ordinate of that voxel...
+                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "right";
-                    System.out.println(i+") Added exterior voxel: "+v+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
-                if (v.z == 0){
-                    //and at the forward end...
-                    exteriorVoxels.add(v); //these voxels should have met the requirement of being able to move out of the puzzle in one movement
+                if (getForward(v.x,v.y,v.z) == null){
+                    //and if the 3D array has 0 or null at the forward co-ordinate of that voxel...
+                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "forward";
-                    System.out.println(i+") Added exterior voxel: "+v+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
-                if (v.z == inputVoxelizedMeshSize){
-                    //and at the backward end...
-                    exteriorVoxels.add(v); //these voxels should have met the requirement of being able to move out of the puzzle in one movement
+                if (getBackward(v.x,v.y,v.z) == null){
+                    //and if the 3D array has 0 or null at the backward co-ordinate of that voxel...
+                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "backward";
-                    System.out.println(i+") Added exterior voxel: "+v+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
             }
@@ -145,17 +148,9 @@ public class Puzlock {
         Note that the weight factor α is set to 0.1 in our implementation. We stop the recursion at j = 3 
         because we found experimentally that the resulting accessibility values are sufficient for guiding the voxel selection, see Figure 8 for an example. 
         Since voxels with low accessibility are likely to be fragmented, we prioritize to include them when constructing a puzzle piece.*/
-//        for (int i=0; i<voxels.size(); i++){
-//            voxels.get(i).setAccessibilityValues(); //what is j supposed to be initially???
-//        }
-        
-        // V_ijk is a 3D voxel grid with l, m, n voxels in each dimension
-        // A_ijk is a corresponding accessibility score to be calculated for each active voxel
-        // p is the number of passes (j in the eqn in the paper) i.e. = 3
-        // alpha is the same as the alpha value in the eqn in the paper i.e. = 0.1
         
         // first pass - simple neighbour count
-        int p=1; //stores index
+        int p=1; //stores index of iterator
         for (int z=0; z<inputVoxelizedMesh.length; z++){
             for (int y=0; y<inputVoxelizedMesh.length; y++){
                 for (int x=0; x<inputVoxelizedMesh.length; x++){
@@ -171,20 +166,46 @@ public class Puzlock {
                 }
             }
         }
+        System.out.println("");
         // subsequent passes - implicitly include neighbours from further afield
+        int passes = 3; //# of passes (j from the eqn in the paper) i.e. = 3
+        int q = 1;
+        for (int pass = 1; pass < passes; pass++) {
+            for (int z=0; z<inputVoxelizedMesh.length; z++){
+                for (int y=0; y<inputVoxelizedMesh.length; y++){
+                    for (int x=0; x<inputVoxelizedMesh.length; x++){
+                        //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
+                        double newAccessValue; //stores the new accessibility value as per the subsequent passes
+                        int index = indexOfCoordinate(x,y,z);
+                        double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
+
+                        double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
+                        double sum = sumOfNeighboursAccValues(x,y,z); //stores the sum of accessibilty values of the voxel's neighbours
+                        newAccessValue = voxels.get(index).accessibilityValue + (power * sum); //I STOPPED HERE!!!
+                        //A = B
+                        Voxel v = voxels.get(index);
+                        v.accessibilityValue = newAccessValue;
+                        System.out.println(q+") Voxel "+v+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
+                        q++;
+                    }
+                }
+            }
+            System.out.println("");
+        }
 
     }
 
     //1.3. Ensure blocking and mobility
-    void ensureBlockingMobility(){
+    static void ensureBlockingMobility(){
         /* • Develop the key piece such that it is removable by a translation along one direction. 
         Identify the normal direction (vn) of the non-upward-facing exterior face of the seed voxel. */
         String vn = seedVoxel.normalDirection; //stores the normal direction
         /* • Do a breadth-first traversal from the seed to find Nb1 pairs of voxels (that orient along vn) that are the nearest to the seed, 
         where in each pair, the voxels on the positive and negative sides of vn are called the blocker and blockee voxels, respectively. 
         Among them, we select Nb2 pairs whose blockee has the smallest accessibility among the Nb1 pairs (in their omplementation Nb1 and Nb2 are set to 50 and 10 respectively). */
-        int Nb1 = 50; //# of voxel pairs which are closest to the seed (50 as per Song et al implementation)
-        int Nb2 = 10; //selected among the Nb1 voxel pairs which have the smallest accessibility value (10 as per Song et al implementation)
+        breadthFirstTraversal();
+        
+        
 
         /* • Block the key from moving towards vn by 
         (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate (without crossing the related blocking voxel and voxels below it); 
@@ -289,73 +310,74 @@ public class Puzlock {
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
     static Voxel getLeft(int x, int y, int z){
         //it will either be 0, 1 or null
-        if (inputVoxelizedMesh[x-1][y][z] == 1){ 
-            int index = indexOfCoordinate(x-1, y, z);
-            return voxels.get(index);
-        }
-        else{
-            return null;
-        }
+        try{
+            if (inputVoxelizedMesh[x-1][y][z] == 1){ 
+                int index = indexOfCoordinate(x-1, y, z);
+                return voxels.get(index);
+            }
+        }catch(Exception e){}
+        return null;
+        
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the right in the inputVoxelizedMesh */
     static Voxel getRight(int x, int y, int z){
         //it will either be 0, 1 or null
-        if (inputVoxelizedMesh[x+1][y][z] == 1){ 
-            int index = indexOfCoordinate(x-1, y, z);
-            return voxels.get(index);
-        }
-        else{
-            return null;
-        }
+        try{
+            if (inputVoxelizedMesh[x+1][y][z] == 1){ 
+                int index = indexOfCoordinate(x+1, y, z);
+                return voxels.get(index);
+            }
+        }catch(Exception e){}
+        return null;
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel above the inputVoxelizedMesh */
     static Voxel getUp(int x, int y, int z){
         //it will either be 0, 1 or null
-        if (inputVoxelizedMesh[x][y+1][z] == 1){ 
-            int index = indexOfCoordinate(x-1, y, z);
-            return voxels.get(index);
-        }
-        else{
-            return null;
-        }
+        try{
+            if (inputVoxelizedMesh[x][y+1][z] == 1){ 
+                int index = indexOfCoordinate(x, y+1, z);
+                return voxels.get(index);
+            }
+        }catch(Exception e){}
+        return null;
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel beneath the inputVoxelizedMesh */
     static Voxel getDown(int x, int y, int z){
         //it will either be 0, 1 or null
-        if (inputVoxelizedMesh[x][y-1][z] == 1){ 
-            int index = indexOfCoordinate(x-1, y, z);
-            return voxels.get(index);
-        }
-        else{
-            return null;
-        }
+        try{
+            if (inputVoxelizedMesh[x][y-1][z] == 1){ 
+                int index = indexOfCoordinate(x, y-1, z);
+                return voxels.get(index);
+            }
+        }catch(Exception e){}
+        return null;
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel in front of the inputVoxelizedMesh */
     static Voxel getForward(int x, int y, int z){
         //it will either be 0, 1 or null
-        if (inputVoxelizedMesh[x][y][z+1] == 1){ 
-            int index = indexOfCoordinate(x-1, y, z);
-            return voxels.get(index);
-        }
-        else{
-            return null;
-        }
+        try{
+            if (inputVoxelizedMesh[x][y][z+1] == 1){ 
+                int index = indexOfCoordinate(x, y, z+1);
+                return voxels.get(index);
+            }
+        }catch(Exception e){}
+        return null;
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel behind the inputVoxelizedMesh */
     static Voxel getBackward(int x, int y, int z){
         //it will either be 0, 1 or null
-        if (inputVoxelizedMesh[x][y][z-1] == 1){ 
-            int index = indexOfCoordinate(x-1, y, z);
-            return voxels.get(index);
-        }
-        else{
-            return null;
-        }
+        try{
+            if (inputVoxelizedMesh[x][y][z-1] == 1){ 
+                int index = indexOfCoordinate(x, y, z-1);
+                return voxels.get(index);
+            }
+        }catch(Exception e){}
+        return null;
     }
     
     /* Takes in a voxel's co-ordinates and counts its neighbours */
@@ -402,5 +424,81 @@ public class Puzlock {
         return neighbours;
     }
     
+    /* Takes in a voxel's co-ordinates and counts its neighbours */
+    static double sumOfNeighboursAccValues(int x, int y, int z){
+        double sum = 0;
+        try{
+            if (inputVoxelizedMesh[x-1][y][z] == 1){
+                //check left
+                int index = indexOfCoordinate(x-1, y, z); //index of left voxel
+                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+            }
+        }catch(Exception e){}
+        try{
+            if (inputVoxelizedMesh[x+1][y][z] == 1){
+                //check right
+                int index = indexOfCoordinate(x+1, y, z); //index of left voxel
+                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+            }
+        }catch(Exception e){}
+        try{
+            if (inputVoxelizedMesh[x][y+1][z] == 1){
+                //check up
+                int index = indexOfCoordinate(x, y+1, z); //index of left voxel
+               double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+            }
+        }catch(Exception e){}
+        try{
+            if (inputVoxelizedMesh[x][y-1][z] == 1){
+                //check down
+                int index = indexOfCoordinate(x, y-1, z); //index of left voxel
+                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+            }
+        }catch(Exception e){}
+        try{
+            if (inputVoxelizedMesh[x][y][z+1] == 1){
+                //check forward
+                int index = indexOfCoordinate(x, y, z+1); //index of left voxel
+                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+            }
+        }catch(Exception e){}
+        try{
+            if (inputVoxelizedMesh[x][y][z-1] == 1){
+                //check backward
+                int index = indexOfCoordinate(x, y, z-1); //index of left voxel
+                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+            }
+        }catch(Exception e){}
+        
+        return sum;
+    }
+    
+    /* conducts the breadth-first traversal from the seed voxel which is necessary to store the blocker and blockee voxel pairs */
+    static void breadthFirstTraversal(){
+        LinkedList<Integer> adjacentVoxels[] = new LinkedList[inputVoxelizedMeshSize]; //stores the currently unvisited voxels which are adjacent to the current voxel 
+        for (int i=0; i<inputVoxelizedMeshSize; i++){
+            adjacentVoxels[i] = new LinkedList();
+        }
+        
+        int Nb1 = 50; //# of voxel pairs which are closest to the seed (50 as per Song et al implementation)
+        int Nb2 = 10; //selected among the Nb1 voxel pairs which have the smallest accessibility value (10 as per Song et al implementation)
+        ArrayList<VoxelPair> voxelPairs = new ArrayList<>(); //stores the Nb1 number of adjacent voxel pairs
+        ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(); //stores the Nb2 number of adjacent voxel pairs
+        System.out.println("Breadth-first traversal from the seed voxel...");
+        for (int i = 0; i < Nb1; i++) {
+            //to make sure we get Nb1 number of voxelPairs in voxelPairs
+            
+        }
+        for (int i = 0; i < Nb2; i++) {
+            //to make sure we get Nb2 number of voxelPairs in voxelPairs2
+            
+        }
+    }
     
 }
