@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -15,7 +16,11 @@ public class Puzlock {
     static ArrayList<Voxel> voxels = new ArrayList<>(); //used to store the set of exterior voxel
     static ArrayList<Voxel> exteriorVoxels = new ArrayList<>(); //used to store the set of exterior voxels
     static ArrayList<Integer> accessibilityValues = new ArrayList<>(); //used to store the set of exterior voxel
-    
+    static ArrayList<Voxel> unvisitedAdjacentVoxels;
+    static int Nb1 = 50; //# of voxel pairs which are closest to the seed (50 as per Song et al implementation)
+    static int Nb2 = 10; //selected among the Nb1 voxel pairs which have the smallest accessibility value (10 as per Song et al implementation)
+    static ArrayList<VoxelPair> voxelPairs = new ArrayList<>(Nb1); //stores the Nb1 number of adjacent voxel pairs
+    static ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(Nb2); //stores the Nb2 number of adjacent voxel pairs
     
     public static void main(String[] args){ 
         //0.1. Read the 3D grid
@@ -203,10 +208,10 @@ public class Puzlock {
         /* • Do a breadth-first traversal from the seed to find Nb1 pairs of voxels (that orient along vn) that are the nearest to the seed, 
         where in each pair, the voxels on the positive and negative sides of vn are called the blocker and blockee voxels, respectively. 
         Among them, we select Nb2 pairs whose blockee has the smallest accessibility among the Nb1 pairs (in their omplementation Nb1 and Nb2 are set to 50 and 10 respectively). */
-        breadthFirstTraversal();
+        breadthFirstTraversal(); //for the purpose of storing the the Nb1 number of voxel pairs in the voxelPairs array
+        //now we can select the Nb2 number of pairs whose blockee has the smallest accessibility value...
+        //algorithm: store all blockees in an array sorted by accessibility value (minimum to maximum) and select the first Nb2 number of blockees..
         
-        
-
         /* • Block the key from moving towards vn by 
         (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate (without crossing the related blocking voxel and voxels below it); 
         we later will select one of them for evolving the key; and 
@@ -475,30 +480,97 @@ public class Puzlock {
                 sum = sum + accVal;
             }
         }catch(Exception e){}
-        
+        //return the sum...
         return sum;
     }
     
     /* conducts the breadth-first traversal from the seed voxel which is necessary to store the blocker and blockee voxel pairs */
     static void breadthFirstTraversal(){
-        LinkedList<Integer> adjacentVoxels[] = new LinkedList[inputVoxelizedMeshSize]; //stores the currently unvisited voxels which are adjacent to the current voxel 
-        for (int i=0; i<inputVoxelizedMeshSize; i++){
-            adjacentVoxels[i] = new LinkedList();
-        }
-        
-        int Nb1 = 50; //# of voxel pairs which are closest to the seed (50 as per Song et al implementation)
-        int Nb2 = 10; //selected among the Nb1 voxel pairs which have the smallest accessibility value (10 as per Song et al implementation)
-        ArrayList<VoxelPair> voxelPairs = new ArrayList<>(); //stores the Nb1 number of adjacent voxel pairs
-        ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(); //stores the Nb2 number of adjacent voxel pairs
+        unvisitedAdjacentVoxels = new ArrayList<>(inputVoxelizedMeshSize); //stores the currently unvisited voxels which are adjacent to the current voxel 
+        unvisitedAdjacentVoxels = voxels;       
         System.out.println("Breadth-first traversal from the seed voxel...");
-        for (int i = 0; i < Nb1; i++) {
-            //to make sure we get Nb1 number of voxelPairs in voxelPairs
-            
-        }
-        for (int i = 0; i < Nb2; i++) {
-            //to make sure we get Nb2 number of voxelPairs in voxelPairs2
-            
-        }
+        //first determine the direction in which to traverse though the graph to find the nearest pairs of voxels...
+        System.out.println("Seed voxel normal direction = "+seedVoxel.normalDirection);
+        Voxel currentVoxel = seedVoxel;
+        String normalDir = seedVoxel.normalDirection;
+        breadthFirstTraversal2(currentVoxel, normalDir); //traverse thought its neighbours
     }
+    
+    /* takes in a voxel and its nornal direction, and traverses through its neighbours, setting the blocking pairs and reducing the set of unvisited voxels */
+    static void breadthFirstTraversal2(Voxel currentVoxel, String normalDir){
+        if (!unvisitedAdjacentVoxels.isEmpty() && voxelPairs.size()<Nb1){ //if the list of unvisited adjacent voxels is not empty i.e. there are unvisited voxels; and we have not exceeded the number of pairs needed...
+            unvisitedAdjacentVoxels.remove(currentVoxel); //remove the current voxel from the set of unvisited voxels
+            //visit current voxels neighbours...
+            Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+            Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+            Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            //I STOPPED HERE!!!...
+            if (normalDir.equals("left")){
+                System.out.println("Traversing right i.e. x++");
+                if (leftNeighbour != null){ //if there is a left neighbour  
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (rightNeighbour != null){ //if there is a right neighbour
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (upNeighbour != null){ //if there is an up neighbour
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (downNeighbour != null){ //if there is a down neighbour
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (forwardNeighbour != null){ //if there is a forward neighbour
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (backwardNeighbour != null){ //if there is a backward neighbour
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }
+            }
+            else if (normalDir.equals("right")){
+                System.out.println("Traversing left i.e. x--");
+
+            }
+            else if (normalDir.equals("forward")){
+                System.out.println("Traversing backward i.e. z--");
+     
+            }
+            else if (normalDir.equals("backward")){
+                System.out.println("Traversing forward i.e. z++");
+      
+            }
+            else{
+                System.out.println("ERROR! The seed voxel's normal direction seems to have not been set in either direction");
+            }
+        }       
+    }
+    
     
 }
