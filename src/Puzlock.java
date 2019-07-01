@@ -330,10 +330,15 @@ public class Puzlock {
     static Voxel getLeft(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x-1][y][z] == 1){ 
+            if (inputVoxelizedMesh[x-1][y][z] == 1){
                 int index = indexOfCoordinate(x-1, y, z);
                 Voxel v = voxels.get(index);
-                System.out.println("Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
+                    System.out.println("ERROR! Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
+                    System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                    System.out.println("");
+                }
                 return v;
             }
         }catch(Exception e){}
@@ -345,10 +350,15 @@ public class Puzlock {
     static Voxel getRight(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x+1][y][z] == 1){ 
+            if (inputVoxelizedMesh[x+1][y][z] == 1){
                 int index = indexOfCoordinate(x+1, y, z);
                 Voxel v = voxels.get(index);
-                System.out.println("Voxel right of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x+1)+", "+y+", "+z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                if (!(v.x+", "+v.y+", "+v.z).equals((x+1)+", "+y+", "+z)){
+                    System.out.println("ERROR! Voxel right of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x+1)+", "+y+", "+z);
+                    System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                    System.out.println("");
+                }
                 return v;
             }
         }catch(Exception e){}
@@ -362,7 +372,12 @@ public class Puzlock {
             if (inputVoxelizedMesh[x][y+1][z] == 1){ 
                 int index = indexOfCoordinate(x, y+1, z);
                 Voxel v = voxels.get(index);
-                System.out.println("Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y+1)+", "+z)){
+                    System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
+                    System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                    System.out.println("");
+                }
                 return v;
             }
         }catch(Exception e){}
@@ -373,10 +388,15 @@ public class Puzlock {
     static Voxel getDown(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x][y-1][z] == 1){ 
+            if (inputVoxelizedMesh[x][y-1][z] == 1){
                 int index = indexOfCoordinate(x, y-1, z);
                 Voxel v = voxels.get(index);
-                System.out.println("Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y-1)+", "+z)){
+                    System.out.println("ERROR! Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
+                    System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                    System.out.println("");
+                }
                 return v;
             }
         }catch(Exception e){}
@@ -387,10 +407,15 @@ public class Puzlock {
     static Voxel getForward(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x][y][z+1] == 1){ 
+            if (inputVoxelizedMesh[x][y][z+1] == 1){
                 int index = indexOfCoordinate(x, y, z+1);
                 Voxel v = voxels.get(index);
-                System.out.println("Voxel forward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z+1));
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+y+", "+(z+1))){
+                    System.out.println("ERROR! Voxel forward of index: "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z+1));
+                    System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                    System.out.println("");
+                }
                 return v;
             }
         }catch(Exception e){}
@@ -401,10 +426,15 @@ public class Puzlock {
     static Voxel getBackward(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x][y][z-1] == 1){ 
+            if (inputVoxelizedMesh[x][y][z-1] == 1){
                 int index = indexOfCoordinate(x, y, z-1);
                 Voxel v = voxels.get(index);
-                System.out.println("Voxel backward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z-1));
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+y+", "+(z-1))){
+                    System.out.println("ERROR! Voxel backward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z-1));
+                    System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                    System.out.println("");
+                }
                 return v;
             }
         }catch(Exception e){}
