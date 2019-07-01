@@ -540,7 +540,7 @@ public class Puzlock {
                     Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -550,7 +550,7 @@ public class Puzlock {
                     Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -560,7 +560,7 @@ public class Puzlock {
                     Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -570,7 +570,7 @@ public class Puzlock {
                     Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -580,7 +580,7 @@ public class Puzlock {
                     Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -590,7 +590,7 @@ public class Puzlock {
                     Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -604,7 +604,7 @@ public class Puzlock {
                     Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -614,7 +614,7 @@ public class Puzlock {
                     Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -624,7 +624,7 @@ public class Puzlock {
                     Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -634,7 +634,7 @@ public class Puzlock {
                     Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -644,7 +644,7 @@ public class Puzlock {
                     Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -654,7 +654,7 @@ public class Puzlock {
                     Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -668,7 +668,7 @@ public class Puzlock {
                     Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -678,7 +678,7 @@ public class Puzlock {
                     Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -688,7 +688,7 @@ public class Puzlock {
                     Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -698,7 +698,7 @@ public class Puzlock {
                     Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -708,7 +708,7 @@ public class Puzlock {
                     Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -718,7 +718,7 @@ public class Puzlock {
                     Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -732,7 +732,7 @@ public class Puzlock {
                     Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -742,7 +742,7 @@ public class Puzlock {
                     Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -752,7 +752,7 @@ public class Puzlock {
                     Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -762,7 +762,7 @@ public class Puzlock {
                     Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -772,7 +772,7 @@ public class Puzlock {
                     Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
@@ -782,7 +782,7 @@ public class Puzlock {
                     Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
-                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
                         unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
                         bfsi++;
