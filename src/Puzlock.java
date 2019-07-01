@@ -9,7 +9,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Puzlock {
     static int [][][] inputVoxelizedMesh;
     static int [][][] outputVoxelizedMesh;
-    static int x, y, z;
     static int inputVoxelizedMeshSize;
     static Voxel voxel;
     static Voxel seedVoxel;
@@ -21,6 +20,8 @@ public class Puzlock {
     static int Nb2 = 10; //selected among the Nb1 voxel pairs which have the smallest accessibility value (10 as per Song et al implementation)
     static ArrayList<VoxelPair> voxelPairs = new ArrayList<>(Nb1); //stores the Nb1 number of adjacent voxel pairs
     static ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(Nb2); //stores the Nb2 number of adjacent voxel pairs
+    static int bfsi = 1; //an iterator for breadthFirstTraversal2 
+    static int bfsi2 = 1; //an iterator for breadthFirstTraversal2 
     
     public static void main(String[] args){ 
         //0.1. Read the 3D grid
@@ -28,13 +29,18 @@ public class Puzlock {
         //0.2. Initialize the 1D array representing the 3D grid/array
         initializeVoxelArray(inputVoxelizedMesh);
         debugPrintVoxelizedMesh(inputVoxelizedMesh);
+        debugPrintVoxels();
         //1. Extacting the key piece
         //1.1. Pick a seed voxel
+        System.out.println("1.1. Picking a seed voxel...");
         pickSeedVoxel(inputVoxelizedMesh);
         //1.2. Compute voxel accessibility
+        System.out.println("1.2. Computing voxel accessibility...");
         computeVoxelAccessibility();
         //1.3. Ensure blocking and mobility
+        System.out.println("1.3. Ensuring blocking and mobility...");
         ensureBlockingMobility();
+        System.out.println("COMPLETE!");
     }
 
     //0. Read/initialize the 3D grid
@@ -47,52 +53,6 @@ public class Puzlock {
             {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
         }; 
         return voxelizedMesh;
-    }
-    
-    /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
-    static void initializeVoxelArray(int [][][] vMesh){
-        for (int z=0; z<vMesh.length; z++){
-            for (int y=0; y<vMesh.length; y++){
-                for (int x=0; x<vMesh.length; x++){
-                    voxels.add(new Voxel(x,y,z));
-                }
-            }
-        }
-    }
-    
-    /* Takes in a 3D array and prints it to console with each z-axis layer being separated by '---'*/
-    static void debugPrintVoxelizedMesh(int [][][] vMesh){
-        for (int z=0; z<vMesh.length; z++){
-            for (int y=0; y<vMesh.length; y++){
-                for (int x=0; x<vMesh.length; x++){
-                    System.out.print(vMesh[z][y][x]+" ");
-                }
-                System.out.println("");
-            }
-            System.out.println("---");
-        }
-    }
-    
-    /* Takes in a 3D array and counts to number of elements it contains */
-    static int computeMeshSize(int[][][] vMesh){
-        int size = 0;
-        for (int z=0; z<vMesh.length; z++){
-            for (int y=0; y<vMesh.length; y++){
-                for (int x=0; x<vMesh.length; x++){
-                    size++;
-                }
-            }
-        }
-        return size;
-    }
-    
-    /* takes in a set of co-ordinates and returns the index of it on the arraylist */
-    static int indexOfCoordinate(int x, int y, int z){
-        int index = 0;
-        index = index + (x*1);
-        index = index + (y*3);
-        index = index + (z*9);
-        return index;
     }
 
     //1. Extacting the key piece
@@ -312,13 +272,69 @@ public class Puzlock {
         These are done in the same way as in Section 5.1. */
     }
     
+    /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
+    static void initializeVoxelArray(int [][][] vMesh){
+        for (int z=0; z<vMesh.length; z++){
+            for (int y=0; y<vMesh.length; y++){
+                for (int x=0; x<vMesh.length; x++){
+                    voxels.add(new Voxel(x,y,z));
+                }
+            }
+        }
+    }
+    
+    /* Takes in a 3D array and prints it to console with each z-axis layer being separated by '---'*/
+    static void debugPrintVoxelizedMesh(int [][][] vMesh){
+        for (int z=0; z<vMesh.length; z++){
+            for (int y=0; y<vMesh.length; y++){
+                for (int x=0; x<vMesh.length; x++){
+                    System.out.print(vMesh[z][y][x]+" ");
+                }
+                System.out.println("");
+            }
+            System.out.println("---");
+        }
+    }
+    
+    /* Takes in a 3D array and counts to number of elements it contains */
+    static int computeMeshSize(int[][][] vMesh){
+        int size = 0;
+        for (int z=0; z<vMesh.length; z++){
+            for (int y=0; y<vMesh.length; y++){
+                for (int x=0; x<vMesh.length; x++){
+                    size++;
+                }
+            }
+        }
+        return size;
+    }
+    
+    /* takes in a set of co-ordinates and returns the index of it on the arraylist */
+    static synchronized int indexOfCoordinate(int x, int y, int z){
+        int index = 0;
+        index = index + (x*1);
+        index = index + (y*4);
+        index = index + (z*16);
+        return index;
+    }
+    
+    static void debugPrintVoxels(){
+        for (int i=0; i<voxels.size(); i++) {
+            Voxel v = voxels.get(i);
+            System.out.println(i+") "+v+" is at "+v.x+", "+v.y+", "+v.z);
+        }
+        System.out.println("");
+    }
+    
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
     static Voxel getLeft(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
             if (inputVoxelizedMesh[x-1][y][z] == 1){ 
                 int index = indexOfCoordinate(x-1, y, z);
-                return voxels.get(index);
+                Voxel v = voxels.get(index);
+                System.out.println("Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
+                return v;
             }
         }catch(Exception e){}
         return null;
@@ -331,7 +347,9 @@ public class Puzlock {
         try{
             if (inputVoxelizedMesh[x+1][y][z] == 1){ 
                 int index = indexOfCoordinate(x+1, y, z);
-                return voxels.get(index);
+                Voxel v = voxels.get(index);
+                System.out.println("Voxel right of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x+1)+", "+y+", "+z);
+                return v;
             }
         }catch(Exception e){}
         return null;
@@ -343,7 +361,9 @@ public class Puzlock {
         try{
             if (inputVoxelizedMesh[x][y+1][z] == 1){ 
                 int index = indexOfCoordinate(x, y+1, z);
-                return voxels.get(index);
+                Voxel v = voxels.get(index);
+                System.out.println("Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
+                return v;
             }
         }catch(Exception e){}
         return null;
@@ -355,7 +375,9 @@ public class Puzlock {
         try{
             if (inputVoxelizedMesh[x][y-1][z] == 1){ 
                 int index = indexOfCoordinate(x, y-1, z);
-                return voxels.get(index);
+                Voxel v = voxels.get(index);
+                System.out.println("Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
+                return v;
             }
         }catch(Exception e){}
         return null;
@@ -367,7 +389,9 @@ public class Puzlock {
         try{
             if (inputVoxelizedMesh[x][y][z+1] == 1){ 
                 int index = indexOfCoordinate(x, y, z+1);
-                return voxels.get(index);
+                Voxel v = voxels.get(index);
+                System.out.println("Voxel forward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z+1));
+                return v;
             }
         }catch(Exception e){}
         return null;
@@ -379,7 +403,9 @@ public class Puzlock {
         try{
             if (inputVoxelizedMesh[x][y][z-1] == 1){ 
                 int index = indexOfCoordinate(x, y, z-1);
-                return voxels.get(index);
+                Voxel v = voxels.get(index);
+                System.out.println("Voxel backward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z-1));
+                return v;
             }
         }catch(Exception e){}
         return null;
@@ -490,14 +516,14 @@ public class Puzlock {
         unvisitedAdjacentVoxels = voxels;       
         System.out.println("Breadth-first traversal from the seed voxel...");
         //first determine the direction in which to traverse though the graph to find the nearest pairs of voxels...
-        System.out.println("Seed voxel normal direction = "+seedVoxel.normalDirection);
-        Voxel currentVoxel = seedVoxel;
+        Voxel currentVoxel = seedVoxel;  
         String normalDir = seedVoxel.normalDirection;
+        System.out.println("Seed voxel normal direction = "+normalDir);
         breadthFirstTraversal2(currentVoxel, normalDir); //traverse thought its neighbours
     }
     
     /* takes in a voxel and its nornal direction, and traverses through its neighbours, setting the blocking pairs and reducing the set of unvisited voxels */
-    static void breadthFirstTraversal2(Voxel currentVoxel, String normalDir){
+    static synchronized void breadthFirstTraversal2(Voxel currentVoxel, String normalDir){   
         if (!unvisitedAdjacentVoxels.isEmpty() && voxelPairs.size()<Nb1){ //if the list of unvisited adjacent voxels is not empty i.e. there are unvisited voxels; and we have not exceeded the number of pairs needed...
             unvisitedAdjacentVoxels.remove(currentVoxel); //remove the current voxel from the set of unvisited voxels
             //visit current voxels neighbours...
@@ -507,69 +533,270 @@ public class Puzlock {
             Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
             Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
             Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-            //I STOPPED HERE!!!...
+
             if (normalDir.equals("left")){
-                System.out.println("Traversing right i.e. x++");
+                System.out.println(bfsi+") Traversing right i.e. x++");
                 if (leftNeighbour != null){ //if there is a left neighbour  
                     Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
                         breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
                     } 
                 }if (rightNeighbour != null){ //if there is a right neighbour
-                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
-                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the right neighbour
                     } 
                 }if (upNeighbour != null){ //if there is an up neighbour
-                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
-                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the up neighbour
                     } 
                 }if (downNeighbour != null){ //if there is a down neighbour
-                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
-                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the down neighbour
                     } 
                 }if (forwardNeighbour != null){ //if there is a forward neighbour
-                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
-                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the forward neighbour
                     } 
                 }if (backwardNeighbour != null){ //if there is a backward neighbour
-                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
                     Voxel voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
                     if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
                         voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
-                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the backward neighbour
                     } 
                 }
             }
             else if (normalDir.equals("right")){
-                System.out.println("Traversing left i.e. x--");
-
+                System.out.println(bfsi+") Traversing left i.e. x--");
+                if (leftNeighbour != null){ //if there is a left neighbour  
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (rightNeighbour != null){ //if there is a right neighbour
+                    Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the right neighbour
+                    } 
+                }if (upNeighbour != null){ //if there is an up neighbour
+                    Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the up neighbour
+                    } 
+                }if (downNeighbour != null){ //if there is a down neighbour
+                    Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the down neighbour
+                    } 
+                }if (forwardNeighbour != null){ //if there is a forward neighbour
+                    Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the forward neighbour
+                    } 
+                }if (backwardNeighbour != null){ //if there is a backward neighbour
+                    Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the backward neighbour
+                    } 
+                }
             }
             else if (normalDir.equals("forward")){
-                System.out.println("Traversing backward i.e. z--");
-     
+                System.out.println(bfsi+") Traversing backward i.e. z--");
+                if (leftNeighbour != null){ //if there is a left neighbour  
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (rightNeighbour != null){ //if there is a right neighbour
+                    Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the right neighbour
+                    } 
+                }if (upNeighbour != null){ //if there is an up neighbour
+                    Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the up neighbour
+                    } 
+                }if (downNeighbour != null){ //if there is a down neighbour
+                    Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the down neighbour
+                    } 
+                }if (forwardNeighbour != null){ //if there is a forward neighbour
+                    Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the forward neighbour
+                    } 
+                }if (backwardNeighbour != null){ //if there is a backward neighbour
+                    Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the backward neighbour
+                    } 
+                }
             }
             else if (normalDir.equals("backward")){
-                System.out.println("Traversing forward i.e. z++");
-      
+                System.out.println(bfsi+") Traversing forward i.e. z++");
+                if (leftNeighbour != null){ //if there is a left neighbour  
+                    Voxel voxel1 = leftNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the left neighbour
+                    } 
+                }if (rightNeighbour != null){ //if there is a right neighbour
+                    Voxel voxel1 = rightNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the right neighbour
+                    } 
+                }if (upNeighbour != null){ //if there is an up neighbour
+                    Voxel voxel1 = upNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the up neighbour
+                    } 
+                }if (downNeighbour != null){ //if there is a down neighbour
+                    Voxel voxel1 = downNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the down neighbour
+                    } 
+                }if (forwardNeighbour != null){ //if there is a forward neighbour
+                    Voxel voxel1 = forwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the forward neighbour
+                    } 
+                }if (backwardNeighbour != null){ //if there is a backward neighbour
+                    Voxel voxel1 = backwardNeighbour; //voxel of the left of the normal direction, i.e. the blockee
+                    Voxel voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z); //voxel of the right of the normal direction, i.e. the blocking
+                    if (voxel2 != null){ //if there exists a possible pair
+                        System.out.println("Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel1.z);
+                        voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
+                        unvisitedAdjacentVoxels.remove(voxel1); //remove voxel1 from the set of unvisited voxels
+                        bfsi++;
+                        breadthFirstTraversal2(voxel1, normalDir); //recurse from the backward neighbour
+                    } 
+                }
             }
             else{
                 System.out.println("ERROR! The seed voxel's normal direction seems to have not been set in either direction");
             }
-        }       
+        }else{
+            System.out.println(bfsi2+") We have now visited all voxels! STOPPING...");
+            bfsi2++;
+        }
     }
     
     
