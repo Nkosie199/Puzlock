@@ -173,14 +173,14 @@ public class Puzlock {
         ArrayList<VoxelPair> accessibleVoxelPairs = new ArrayList(); //stores the voxel pairs with the lowest accessibility values
         double maxAccVal = 0; //stores the maximum accessibility value
         for (VoxelPair p: voxelPairs) {
-            Voxel v = p.getVoxel1();
+            Voxel v = p.getVoxel2();
             accVals.add(v.accessibilityValue);
         }
         Collections.sort(accVals); //sorts the stores accessibility values
         maxAccVal = accVals.get(Nb2-1);
         //for each voxelpair, if a voxelpair's blockee has an accessibilty value less than or equal to the max of the sorted accessibility value, store it
         for (VoxelPair q: voxelPairs) {
-            Double d = q.getVoxel1().accessibilityValue; //get the voxelpair's blockee's accessibility value
+            Double d = q.getVoxel2().accessibilityValue; //get the voxelpair's blockee's accessibility value
             if (d <= maxAccVal){
                 accessibleVoxelPairs.add(q); //add it to the list of Nb2 voxel pairs
                 if (accessibleVoxelPairs.size() == Nb2){
@@ -190,15 +190,26 @@ public class Puzlock {
             }
         }
         System.out.println("Debug printing the sorted list of accessibility values, where max = "+maxAccVal+"...");
+        System.out.println("The seed voxel is at "+seedVoxel.getCoordinates());
         for (int i=0; i<Nb2; i++) {
             //debug print the sorted list of accessibility values and voxel pairs
-            System.out.print(i+") "+accessibleVoxelPairs.get(i).getVoxel1().accessibilityValue);
-            System.out.println(", voxel pair: "+accessibleVoxelPairs.get(i));
+            VoxelPair vp = accessibleVoxelPairs.get(i);
+            Voxel blocking = vp.getVoxel1();
+            Voxel blockee = vp.getVoxel2();
+            System.out.print(i+") "+vp.getVoxel1().accessibilityValue);
+            System.out.println(", voxel pair: "+vp+", blockee is at "+blockee.getCoordinates()+", blocking is at "+blocking.getCoordinates());
         }
+        System.out.println("");
         /* • Block the key from moving towards vn by 
-        (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate (without crossing the related blocking voxel and voxels below it); 
+        (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate 
+        (without crossing the related blocking voxel and voxels below it); 
         we later will select one of them for evolving the key; and 
         (ii) extract all the voxels along a selected shortest path until the blockee, and adding these voxels to evolve the key piece. */
+        //now we will compute the shortest path to each blockee, without crossing the blocker or going beneath it...
+        for (int i = 0; i < accessibleVoxelPairs.size(); i++) {
+            //for each accessible voxel pair
+            System.out.println("Shortest path from "+seedVoxel.getCoordinates()+" to "+accessibleVoxelPairs.get(i).getVoxel2().getCoordinates());
+        }
 
 
         /* • Ensure the key to be removable upward by including any voxel above the selected shortest path. 
@@ -588,8 +599,8 @@ public class Puzlock {
         Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
         Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
         Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-        Voxel voxel1; //voxel of the left of the normal direction, i.e. the blockee
-        Voxel voxel2; //voxel of the right of the normal direction, i.e. the blocking
+        Voxel voxel1; //voxel of the left of the normal direction, i.e. the blocking
+        Voxel voxel2; //voxel of the right of the normal direction, i.e. the blockee
         ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores the set of neighbours
 
         if (normalDir.equals("left")){
@@ -761,7 +772,7 @@ public class Puzlock {
     static void breadthFirstTraversal3(Voxel voxel1, Voxel voxel2){
         if ((voxel2 != null)  && (voxelPairs.size()<Nb1) && (!visitedAdjacentVoxels.contains(voxel1))){ //if there exists a possible pair and we still don't have enough voxel pairs 
             //... and voxel1 has not been visited 
-            System.out.println(bfsi+") Voxel1 is at "+voxel1.x+", "+voxel1.y+", "+voxel1.z+". Voxel2 is at "+voxel2.x+", "+voxel2.y+", "+voxel2.z);
+            System.out.println(bfsi+") Voxel1 is at "+voxel1.getCoordinates()+". Voxel2 is at "+voxel2.getCoordinates());
             voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
             bfsi++;
         }
