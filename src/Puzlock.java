@@ -1,6 +1,5 @@
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -170,7 +169,32 @@ public class Puzlock {
         //now we can select the Nb2 number of pairs whose blockee has the smallest accessibility value...
         System.out.println("\n Selecting the Nb2 number of pairs amoing "+voxelPairs.size()+" pairs...");
         //algorithm: store all blockees in an array sorted by accessibility value (minimum to maximum) and select the first Nb2 number of blockees..
-        
+        ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
+        ArrayList<VoxelPair> accessibleVoxelPairs = new ArrayList(); //stores the voxel pairs with the lowest accessibility values
+        double maxAccVal = 0; //stores the maximum accessibility value
+        for (VoxelPair p: voxelPairs) {
+            Voxel v = p.getVoxel1();
+            accVals.add(v.accessibilityValue);
+        }
+        Collections.sort(accVals); //sorts the stores accessibility values
+        maxAccVal = accVals.get(Nb2-1);
+        //for each voxelpair, if a voxelpair's blockee has an accessibilty value less than or equal to the max of the sorted accessibility value, store it
+        for (VoxelPair q: voxelPairs) {
+            Double d = q.getVoxel1().accessibilityValue; //get the voxelpair's blockee's accessibility value
+            if (d <= maxAccVal){
+                accessibleVoxelPairs.add(q); //add it to the list of Nb2 voxel pairs
+                if (accessibleVoxelPairs.size() == Nb2){
+                    //if the list of accessible voxel pairs is large enough, break out of the loop
+                    break;
+                }
+            }
+        }
+        System.out.println("Debug printing the sorted list of accessibility values, where max = "+maxAccVal+"...");
+        for (int i=0; i<Nb2; i++) {
+            //debug print the sorted list of accessibility values and voxel pairs
+            System.out.print(i+") "+accessibleVoxelPairs.get(i).getVoxel1().accessibilityValue);
+            System.out.println(", voxel pair: "+accessibleVoxelPairs.get(i));
+        }
         /* • Block the key from moving towards vn by 
         (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate (without crossing the related blocking voxel and voxels below it); 
         we later will select one of them for evolving the key; and 
