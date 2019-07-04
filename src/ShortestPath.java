@@ -63,7 +63,7 @@ public class ShortestPath {
                     tSum[i][j][k] = min(tSum[i-1][j][k], tSum[i][j-1][k],  tSum[i][j][k-1]) + arr[i][j][k]; 
 
         return tSum[l-1][m-1][n-1]; 
-    } 
+    }
 
     // Driver program 
     public static void main (String[] args) 
@@ -71,6 +71,6 @@ public class ShortestPath {
         int arr[][][] = { { {1, 2, 4}, {3, 4, 5}, {5, 2, 1}}, 
                         { {4, 8, 3}, {5, 2, 1}, {3, 4, 2}}, 
                         { {2, 4, 1}, {3, 1, 4}, {6, 3, 8}} }; 
-        System.out.println ( minPathSum(arr)); 
+        System.out.println (minPathSum(arr)); 
     } 
 } 
