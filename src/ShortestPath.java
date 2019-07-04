@@ -1,76 +1,79 @@
+
+import java.util.ArrayList;
+
 /**
- *
- * @author vt_m (https://www.geeksforgeeks.org/minimum-sum-path-3-d-array/)
+ * A Java program for Dijkstra's single source shortest path algorithm. 
+ * @author Nkosi Gumede
  */
 
-// Java program for Min path sum of 3D-array 
-import java.io.*; 
-
-public class ShortestPath {
-	
-    static int l =3; 
-    static int m =3; 
-    static int n =3; 
-
-    // A utility function that returns minimum 
-    // of 3 integers 
-    static int min(int x, int y, int z) 
-    { 
-        return (x < y)? ((x < z)? x : z) : ((y < z)? y : z); 
-    } 
-
-    // function to calculate MIN path sum of 3D array 
-    static int minPathSum(int arr[][][]) 
-    { 
-        int i, j, k; 
-        int tSum[][][] =new int[l][m][n]; 
-
-        tSum[0][0][0] = arr[0][0][0]; 
-
-        /* Initialize first row of tSum array */
-        for (i = 1; i < l; i++) 
-            tSum[i][0][0] = tSum[i-1][0][0] + arr[i][0][0]; 
-
-        /* Initialize first column of tSum array */
-        for (j = 1; j < m; j++) 
-            tSum[0][j][0] = tSum[0][j-1][0] + arr[0][j][0]; 
-
-        /* Initialize first width of tSum array */
-        for (k = 1; k < n; k++) 
-            tSum[0][0][k] = tSum[0][0][k-1] + arr[0][0][k]; 
-
-        /* Initialize first row- First column of 
-                tSum array */
-        for (i = 1; i < l; i++) 
-            for (j = 1; j < m; j++) 
-                tSum[i][j][0] = min(tSum[i-1][j][0], tSum[i][j-1][0], Integer.MAX_VALUE) + arr[i][j][0]; 
-
-        /* Initialize first row- First width of tSum array */
-        for (i = 1; i < l; i++) 
-            for (k = 1; k < n; k++) 
-                tSum[i][0][k] = min(tSum[i-1][0][k], tSum[i][0][k-1], Integer.MAX_VALUE) + arr[i][0][k]; 
-
-        /* Initialize first width- First column of 
-                tSum array */
-        for (k = 1; k < n; k++) 
-            for (j = 1; j < m; j++) 
-                tSum[0][j][k] = min(tSum[0][j][k-1], tSum[0][j-1][k], Integer.MAX_VALUE) + arr[0][j][k]; 
-
-        /* Construct rest of the tSum array */
-        for (i = 1; i < l; i++) 
-            for (j = 1; j < m; j++) 
-                for (k = 1; k < n; k++) 
-                    tSum[i][j][k] = min(tSum[i-1][j][k], tSum[i][j-1][k],  tSum[i][j][k-1]) + arr[i][j][k]; 
-
-        return tSum[l-1][m-1][n-1]; 
+public class ShortestPath { 
+    Puzlock puzlock = new Puzlock(); //we will need some Puzlock methods to get the current neighbours etc
+    ArrayList<Vertex> vertices = new ArrayList<>();
+    ArrayList<Voxel> visitedVoxels = new ArrayList<>(); //the set of unvisited nodes
+    ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //the set of visited nodes
+    int maxDistance = 1000000; //represents the maximum distance (which is set upon initialization) i.e. infinity. Must be > total number of voxels
+    
+    /* takes in the voxel array, source (seed), destination (blockee) and the blocking voxel*/
+    public ShortestPath(ArrayList<Voxel> voxels, Voxel source, Voxel destination, Voxel blocking){
+        //0. initialize the variables...
+        unvisitedVoxels = voxels; //since all nodes are initially unvisted; beware of the shrinking list concurrency problem by ensuring Puzlock.voxels does not shrink
+        //initialize the source vertex
+        vertices.add(new Vertex(source, 0, null));
+        //initialize the other vertices...
+        for (Voxel v: voxels){
+            //if current voxel is not equal to source (OR BLOCKING???)
+            if (!v.equals(source)){
+                vertices.add(new Vertex(v, maxDistance, null));
+            }
+        }
+        //debug print the vertices...
+//        debugPrintVerices();
+        //1. Visit the unvisited vertex with the smallest know distance from the start vertex...
+        //for the current vertex v, visit the univisited neighbours
+        for (Vertex v: vertices) {
+            Voxel currentVoxel = v.id;
+            Voxel leftNeighbour = puzlock.getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+            Voxel rightNeighbour = puzlock.getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+            Voxel upNeighbour = puzlock.getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            Voxel downNeighbour = puzlock.getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            Voxel forwardNeighbour = puzlock.getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            Voxel backwardNeighbour = puzlock.getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+            
+            if (leftNeighbour != null){ //if there is a left neighbour
+                //set its distance equal to the distance of the current voxel + distance to its neighbour               
+                
+            }if (rightNeighbour != null){ //if there is a right neighbour
+                
+            }if (upNeighbour != null){ //if there is an up neighbour
+                
+            }if (downNeighbour != null){ //if there is a down neighbour
+                
+            }if (forwardNeighbour != null){ //if there is a forward neighbour
+                
+            }if (backwardNeighbour != null){ //if there is a backward neighbour
+                
+            }
+        }
     }
+    
+    void debugPrintVerices(){
+        System.out.println("Debug printing all vertices...");
+        for (int i = 0; i < vertices.size(); i++) {
+            Vertex v = vertices.get(i);
+            System.out.println(i+") ID: "+v.id+", Shortest distance from source: "+v.shortestDistanceFromSource+", Previous vertex: "+v.previousVertex);
+        }
+    }
+}
 
-    // Driver program 
-    public static void main (String[] args) 
-    { 
-        int arr[][][] = { { {1, 2, 4}, {3, 4, 5}, {5, 2, 1}}, 
-                        { {4, 8, 3}, {5, 2, 1}, {3, 4, 2}}, 
-                        { {2, 4, 1}, {3, 1, 4}, {6, 3, 8}} }; 
-        System.out.println (minPathSum(arr)); 
-    } 
-} 
+/* this class represents each vertex in the list of vertices */
+class Vertex{
+    Voxel id;
+    int shortestDistanceFromSource;
+    Voxel previousVertex;
+    
+    Vertex(Voxel id, int shortestDistFromSource, Voxel previousVertex){
+        this.id = id;
+        this.shortestDistanceFromSource = shortestDistFromSource;
+        this.previousVertex = previousVertex;
+    }
+}
