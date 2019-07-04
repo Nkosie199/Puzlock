@@ -38,7 +38,7 @@ public class Puzlock {
         //1.3. Ensure blocking and mobility
         System.out.println("1.3. Ensuring blocking and mobility...");
         ensureBlockingMobility();
-        System.out.println("COMPLETE!");
+        System.out.println("\nCOMPLETE!");
     }
 
     //0. Read/initialize the 3D grid
@@ -167,7 +167,7 @@ public class Puzlock {
         Among them, we select Nb2 pairs whose blockee has the smallest accessibility among the Nb1 pairs (in their omplementation Nb1 and Nb2 are set to 50 and 10 respectively). */
         breadthFirstTraversal(); //for the purpose of storing the the Nb1 number of voxel pairs in the voxelPairs array
         //now we can select the Nb2 number of pairs whose blockee has the smallest accessibility value...
-        System.out.println("\n Selecting the Nb2 number of pairs amoing "+voxelPairs.size()+" pairs...");
+        System.out.println("\nSelecting the Nb2 number of pairs amoing "+voxelPairs.size()+" pairs...");
         //algorithm: store all blockees in an array sorted by accessibility value (minimum to maximum) and select the first Nb2 number of blockees..
         ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
         ArrayList<VoxelPair> accessibleVoxelPairs = new ArrayList(); //stores the voxel pairs with the lowest accessibility values
@@ -199,7 +199,6 @@ public class Puzlock {
             System.out.print(i+") "+vp.getVoxel1().accessibilityValue);
             System.out.println(", voxel pair: "+vp+", blockee is at "+blockee.getCoordinates()+", blocking is at "+blocking.getCoordinates());
         }
-        System.out.println("");
         /* • Block the key from moving towards vn by 
         (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate 
         (without crossing the related blocking voxel and voxels below it); 
@@ -208,9 +207,10 @@ public class Puzlock {
         //now we will compute the shortest path to each blockee, without crossing the blocker or going beneath it...
         for (int i = 0; i < accessibleVoxelPairs.size(); i++) {
             //for each accessible voxel pair
-            System.out.println("Shortest path from "+seedVoxel.getCoordinates()+" to "+accessibleVoxelPairs.get(i).getVoxel2().getCoordinates());
+            System.out.println("\nShortest path from "+seedVoxel.getCoordinates()+" to "+accessibleVoxelPairs.get(i).getVoxel2().getCoordinates()+" where blocking voxel is at "+accessibleVoxelPairs.get(i).getVoxel1().getCoordinates()+"...");
+            shortestPath(seedVoxel, accessibleVoxelPairs.get(i).getVoxel2(), accessibleVoxelPairs.get(i).getVoxel1()); //shortest path form seed to current blockee without crossing the relvant blocking
         }
-
+        
 
         /* • Ensure the key to be removable upward by including any voxel above the selected shortest path. 
         //This is why the shortest paths determined in the strategy above should not go through the blocking voxel or any voxel below it, else the blockage is destructed. 
@@ -776,6 +776,73 @@ public class Puzlock {
             voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
             bfsi++;
         }
+    }
+    
+    /* computes the shortest path from A to B */
+    static void shortestPath(Voxel source, Voxel blockee, Voxel blocking){
+        //where the seed is the starting point, the blockee is the destination, and the blocking is the voxel to avoid...
+        //check the neighbours and try to get closer to without going down...
+        if (source.x < blockee.x){
+            //if the blockee's x co-ordinate is greater than the seed's, go right
+            Voxel rightNeighbour = getRight(source.x, source.y, source.z);
+            if (!rightNeighbour.getCoordinates().equals(blocking.getCoordinates())){
+                //only if the blocking is not right
+                System.out.print("Right to "+rightNeighbour.getCoordinates()+"...");
+                if (!rightNeighbour.equals(blockee)){
+                    //recurse if source is not equal to blockee
+                    shortestPath(rightNeighbour, blockee, blocking);
+                }
+            }
+        }
+        if (source.x > blockee.x){
+            //if the blockee's x co-ordinate is less than the seed's, go left
+            Voxel leftNeighbour = getLeft(source.x, source.y, source.z);
+            if (!leftNeighbour.getCoordinates().equals(blocking.getCoordinates())){
+                //only if the blocking is not left
+                System.out.print("Left to "+leftNeighbour.getCoordinates()+"...");
+                if (!leftNeighbour.equals(blockee)){
+                    //recurse if source is not equal to blockee
+                    shortestPath(leftNeighbour, blockee, blocking);
+                }
+            }
+        }
+        if (source.y < blockee.y){
+            //if the blockee's y co-ordinate is greater than the seed's, go up
+            Voxel upNeighbour = getUp(source.x, source.y, source.z);
+            if (!upNeighbour.getCoordinates().equals(blocking.getCoordinates())){
+                //only if the blocking is not up
+                System.out.print("Up to "+upNeighbour.getCoordinates()+"...");
+                if (!upNeighbour.equals(blockee)){
+                    //recurse if source is not equal to blockee
+                    shortestPath(upNeighbour, blockee, blocking);
+                }
+            }
+        }
+        if (source.z < blockee.z){
+            //if the blockee's z co-ordinate is greater than the seed's, go forward
+            Voxel forwardNeighbour = getForward(source.x, source.y, source.z);
+            if (!forwardNeighbour.getCoordinates().equals(blocking.getCoordinates())){
+                //only if the blocking is not forward
+                System.out.print("Forward to "+forwardNeighbour.getCoordinates()+"...");
+                if (!forwardNeighbour.equals(blockee)){
+                    //recurse if source is not equal to blockee
+                    shortestPath(forwardNeighbour, blockee, blocking);
+                }
+            }
+        }
+        if (source.z > blockee.z){
+            //if the blockee's z co-ordinate is less than the seed's, go backward
+            Voxel backwardNeighbour = getBackward(source.x, source.y, source.z);
+            if (!backwardNeighbour.getCoordinates().equals(blocking.getCoordinates())){
+                //only if the blocking is not backward
+                System.out.print("Backward to "+backwardNeighbour.getCoordinates()+"...");
+                if (!backwardNeighbour.equals(blockee)){
+                    //recurse if source is not equal to blockee
+                    shortestPath(backwardNeighbour, blockee, blocking);
+                }
+            }
+        }
+        
     }
     
 }
