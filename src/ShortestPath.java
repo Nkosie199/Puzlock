@@ -182,7 +182,7 @@ public class ShortestPath {
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y == seed.y) && (currentVoxel.z < seed.z) && (currentVoxel.z < backness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
-                    backness = currentVoxel.x; //update the backest position
+                    backness = currentVoxel.z; //update the backest position
                 }
             }
             if (anchorVoxel != null){
@@ -199,7 +199,7 @@ public class ShortestPath {
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y == seed.y) && (currentVoxel.z > seed.z) && (currentVoxel.z > forwardness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
-                    forwardness = currentVoxel.x; //update the forwardest position
+                    forwardness = currentVoxel.z; //update the forwardest position
                 }
             }
             if (anchorVoxel != null){
