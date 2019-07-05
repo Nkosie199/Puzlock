@@ -5,8 +5,9 @@
 public class Voxel {
     public String normalDirection;
     public double accessibilityValue;
-    //voxel co-ordinates...
-    public int x, y, z;
+    public int x, y, z; //voxel co-ordinates...
+    int shortestDistanceFromSource; //used in shortest path algorithm
+    Voxel previousVertex; //used in shortest path algorithm
     
     public Voxel(int x, int y, int z){
         this.x = x;

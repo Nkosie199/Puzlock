@@ -11,21 +11,23 @@ public class Puzlock {
     static int inputVoxelizedMeshSize;
     static Voxel voxel;
     static Voxel seedVoxel;
-    static ArrayList<Voxel> voxels = new ArrayList<>(); //used to store the set of exterior voxel
+    static ArrayList<Voxel> voxels = new ArrayList<>(); //used to store the entire set of voxels
+    static ArrayList<Voxel> voxels2 = new ArrayList<>(); //used to store the entire set of voxels, used in ShortestPath class
     static ArrayList<Voxel> exteriorVoxels = new ArrayList<>(); //used to store the set of exterior voxels
-    static ArrayList<Integer> accessibilityValues = new ArrayList<>(); //used to store the set of exterior voxel
+    static ArrayList<Integer> accessibilityValues = new ArrayList<>(); //used to store the set of accessibility values
     static ArrayList<Voxel> visitedAdjacentVoxels; //stores the set of currently visited voxels, used in breadth first traversal
     static int Nb1 = 50; //# of voxel pairs which are closest to the seed (50 as per Song et al implementation)
     static int Nb2 = 10; //selected among the Nb1 voxel pairs which have the smallest accessibility value (10 as per Song et al implementation)
     static ArrayList<VoxelPair> voxelPairs = new ArrayList<>(Nb1); //stores the Nb1 number of adjacent voxel pairs
     static ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(Nb2); //stores the Nb2 number of adjacent voxel pairs
     static int bfsi = 1; //an iterator for breadthFirstTraversal2
+    static ShortestPath sp;
     
     public static void main(String[] args){ 
         //0.1. Read the 3D grid
         inputVoxelizedMesh = readVoxelizedMesh();
         //0.2. Initialize the 1D array representing the 3D grid/array
-        initializeVoxelArray(inputVoxelizedMesh);
+        initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array
         debugPrintVoxelizedMesh(inputVoxelizedMesh);
         debugPrintVoxels();
         //1. Extacting the key piece
@@ -178,10 +180,12 @@ public class Puzlock {
         }
         Collections.sort(accVals); //sorts the stores accessibility values
         maxAccVal = accVals.get(Nb2-1);
-        //for each voxelpair, if a voxelpair's blockee has an accessibilty value less than or equal to the max of the sorted accessibility value, store it
+        //for each voxelpair
         for (VoxelPair q: voxelPairs) {
             Double d = q.getVoxel2().accessibilityValue; //get the voxelpair's blockee's accessibility value
-            if (d <= maxAccVal){
+            //if a voxelpair's blockee has an accessibilty value less than or equal to the max of the sorted accessibility value, 
+            //and it is not already in the set of accessible voxel pairs
+            if ((d <= maxAccVal) && (!accessibleVoxelPairs.contains(q))){
                 accessibleVoxelPairs.add(q); //add it to the list of Nb2 voxel pairs
                 if (accessibleVoxelPairs.size() == Nb2){
                     //if the list of accessible voxel pairs is large enough, break out of the loop
@@ -205,10 +209,16 @@ public class Puzlock {
         we later will select one of them for evolving the key; and 
         (ii) extract all the voxels along a selected shortest path until the blockee, and adding these voxels to evolve the key piece. */
         //now we will compute the shortest path to each blockee, without crossing the blocker or going beneath it...
-        for (int i = 0; i < accessibleVoxelPairs.size(); i++) {
+        for (int i=0; i<accessibleVoxelPairs.size(); i++) {
             //for each accessible voxel pair
-            System.out.println("\nShortest path from "+seedVoxel.getCoordinates()+" to "+accessibleVoxelPairs.get(i).getVoxel2().getCoordinates()+" where blocking voxel is at "+accessibleVoxelPairs.get(i).getVoxel1().getCoordinates()+"...");
-            shortestPath(seedVoxel, accessibleVoxelPairs.get(i).getVoxel2(), accessibleVoxelPairs.get(i).getVoxel1()); //shortest path form seed to current blockee without crossing the relvant blocking
+            VoxelPair vp = accessibleVoxelPairs.get(i);
+            Voxel blocking = vp.getVoxel1();
+            Voxel blockee = vp.getVoxel2();
+            System.out.println("\nShortest path from "+seedVoxel.getCoordinates()+" to "+blockee.getCoordinates()+" where blocking voxel is at "+blocking.getCoordinates()+" and normal direction is "+seedVoxel.normalDirection+"...");
+//            shortestPath(seedVoxel, accessibleVoxelPairs.get(i).getVoxel2(), accessibleVoxelPairs.get(i).getVoxel1()); //shortest path form seed to current blockee without crossing the relvant blocking
+            //must clone the array to prevent the concurrency issue
+            ArrayList<Voxel> voxels3 = (ArrayList)voxels2.clone();
+            sp = new ShortestPath(voxels3, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
         }
         
 
@@ -311,7 +321,9 @@ public class Puzlock {
         for (int z=0; z<vMesh.length; z++){
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
-                    voxels.add(new Voxel(x,y,z));
+                    Voxel v = new Voxel(x,y,z);
+                    voxels.add(v);
+                    voxels2.add(v);
                 }
             }
         }
@@ -772,7 +784,7 @@ public class Puzlock {
     static void breadthFirstTraversal3(Voxel voxel1, Voxel voxel2){
         if ((voxel2 != null)  && (voxelPairs.size()<Nb1) && (!visitedAdjacentVoxels.contains(voxel1))){ //if there exists a possible pair and we still don't have enough voxel pairs 
             //... and voxel1 has not been visited 
-            System.out.println(bfsi+") Voxel1 is at "+voxel1.getCoordinates()+". Voxel2 is at "+voxel2.getCoordinates());
+            System.out.println(bfsi+") Blocking voxel is at "+voxel1.getCoordinates()+". Blockee voxel is at "+voxel2.getCoordinates());
             voxelPairs.add(new VoxelPair(voxel1,voxel2)); //add the pair to the list of pairs
             bfsi++;
         }
@@ -792,6 +804,10 @@ public class Puzlock {
                     //recurse if source is not equal to blockee
                     shortestPath(rightNeighbour, blockee, blocking);
                 }
+            }
+            else{
+                //if the blocking IS right, try to go around it...
+                
             }
         }
         if (source.x > blockee.x){
