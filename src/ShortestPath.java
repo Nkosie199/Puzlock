@@ -103,10 +103,13 @@ public class ShortestPath {
         //get the side opposite to the seed's normal direction...
         Voxel seed = puzlock.seedVoxel;//stores the seed voxel
         String normalDir = seed.normalDirection;
+        int noOfCandidates = path.size();
         if (normalDir.equals("left")){
             //then we want to pick the voxel to the far right...
+            System.out.print("Among "+noOfCandidates+" candidates. ");
+            System.out.println("Picking an anchor at the far right...");
             int rightness = 0; //indicates the position of the rightest voxel, initialized as left i.e. 0 (left)
-            for (int i=1; i<(path.size()-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 //make sure it is on the same y (and z???)
                 if ((currentVoxel.y == seed.y) && (currentVoxel.x > seed.x) && (currentVoxel.x > rightness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
@@ -114,11 +117,17 @@ public class ShortestPath {
                     rightness = currentVoxel.x; //update the rightest position
                 }
             }
-            System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+            if (anchorVoxel != null){
+                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+            }else{
+                System.out.println("Anchor voxel is null");
+            }
         }else if (normalDir.equals("right")){
             //then we want to pick the voxel to the far left...
+            System.out.print("Among "+noOfCandidates+" candidates. ");
+            System.out.println("Picking an anchor at the far left...");
             int leftness = puzlock.inputVoxelizedMeshSize; //indicates the position of the rightest voxel, initialized as right i.e. inputVoxelizedMeshSize
-            for (int i=1; i<(path.size()-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y == seed.y) && (currentVoxel.x < seed.x) && (currentVoxel.x < leftness)){ //if current voxel is on the same y co-ordinate of the seed and to the left of the seed and more left than any other
                     anchorVoxel = currentVoxel;
@@ -131,9 +140,11 @@ public class ShortestPath {
                 System.out.println("Anchor voxel is null");
             }
         }else if (normalDir.equals("up")){
+            System.out.print("Among "+noOfCandidates+" candidates. ");
+            System.out.println("Picking an anchor at the far top...");
             //then we want to pick the voxel to the far bottom...
             int bottomness = 0; //indicates the position of the lowest voxel, initialized as bottom i.e. 0 (top)
-            for (int i=1; i<(path.size()-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y >= seed.y) && (currentVoxel.y > bottomness)){ //if current voxel is on the same y co-ordinate of the seed or lower and the lowest
                     anchorVoxel = currentVoxel;
@@ -146,9 +157,11 @@ public class ShortestPath {
                 System.out.println("Anchor voxel is null");
             }
         }else if (normalDir.equals("down")){
+            System.out.print("Among "+noOfCandidates+" candidates. ");
+            System.out.println("Picking an anchor at the far bottom...");
             //then we want to pick the voxel to the far top...
             int topness = puzlock.inputVoxelizedMeshSize;; //indicates the position of the topest voxel, initialized as bottom i.e. inputVoxelizedMeshSize
-            for (int i=1; i<(path.size()-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y <= seed.y) && (currentVoxel.y < topness)){ //if current voxel is on the same y co-ordinate of the seed or higher and the highest
                     anchorVoxel = currentVoxel;
@@ -161,9 +174,11 @@ public class ShortestPath {
                 System.out.println("Anchor voxel is null");
             }
         }else if (normalDir.equals("forward")){
+            System.out.print("Among "+noOfCandidates+" candidates. ");
+            System.out.println("Picking an anchor at the far back...");
             //then we want to pick the voxel to the far back...
             int backness = puzlock.inputVoxelizedMeshSize; //indicates the position of the backest voxel, initialized as forward i.e. inputVoxelizedMeshSize
-            for (int i=1; i<(path.size()-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y == seed.y) && (currentVoxel.z < seed.z) && (currentVoxel.z < backness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
@@ -176,9 +191,11 @@ public class ShortestPath {
                 System.out.println("Anchor voxel is null");
             }
         }else if (normalDir.equals("backward")){
+            System.out.print("Among "+noOfCandidates+" candidates. ");
+            System.out.println("Picking an anchor at the far front...");
             //then we want to pick the voxel to the far front...
             int forwardness = 0; //indicates the position of the forwardest voxel, initialized as back i.e. 0
-            for (int i=1; i<(path.size()-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 if ((currentVoxel.y == seed.y) && (currentVoxel.z > seed.z) && (currentVoxel.z > forwardness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
