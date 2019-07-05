@@ -22,6 +22,8 @@ public class Puzlock {
     static ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(Nb2); //stores the Nb2 number of adjacent voxel pairs
     static int bfsi = 1; //an iterator for breadthFirstTraversal2
     static ShortestPath sp;
+    static ArrayList<Voxel> removablePiece = new ArrayList<>(); //stores piece given by the shortest path which have been made removable by adding the voxels above them
+    static ArrayList<ArrayList> removablePieces = new ArrayList<>(); //stores all the removable pieces
     
     public static void main(String[] args){ 
         //0.1. Read the 3D grid
@@ -221,10 +223,27 @@ public class Puzlock {
             sp = new ShortestPath(voxels3, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
         }
         
-
         /* • Ensure the key to be removable upward by including any voxel above the selected shortest path. 
-        //This is why the shortest paths determined in the strategy above should not go through the blocking voxel or any voxel below it, else the blockage is destructed. 
-        //Moreover, we ignore the shortest path candidates that eventually add excessive voxels since the key should less than m voxels. */
+        This is why the shortest paths determined in the strategy above should not go through the blocking voxel or any voxel below it, 
+        else the blockage is destructed. 
+        Moreover, we ignore the shortest path candidates that eventually add excessive voxels since the key should less than m voxels. */
+        ArrayList<ArrayList> spCandidates = sp.shortestPathCandidates; //get the set of shortest path candidates
+        //make the key piece removable then expand the key piece (next method)...
+        //NOTE: we should perhaps move this code to a method in the ShortestPath class (for proper addeding of voxels which make pieces romovable excluding the anchor)...
+        for (int i=0; i<spCandidates.size(); i++) { //for each shortest path candidate...
+            ArrayList<Voxel> shortestPath = spCandidates.get(i);
+            //add all the voxels above the current set of voxels...
+            for (int j=0; j<shortestPath.size(); j++){ //for each voxel in the path
+                Voxel currentVoxel = shortestPath.get(j);
+                removablePiece.add(currentVoxel); //add the current voxel
+                for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
+                    if (k<currentVoxel.y){ //if y co-ordinate is less than that of the current voxel i.e. on top of it 
+                        removablePiece.add(currentVoxel); //add it to the set of candidate voxels (represented in figure 9(e))
+                    }
+                }
+            }
+            removablePieces.add(removablePiece); //store the removable piece
+        }
 
         /* • Devise a key that moves upward but not along vn. However, since new voxels are added to the key, 
         the key may accidentally become mobilized in a direction along which the seed was originally blocked (eg. +X, -Y, +/-Z). 
