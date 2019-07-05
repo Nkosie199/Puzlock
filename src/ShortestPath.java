@@ -81,13 +81,13 @@ public class ShortestPath {
     }
     
     void getShortestPath(Voxel start, Voxel destination){
-        System.out.println("Printing the path from source to destination...");
+        System.out.println("Printing the path from destination to source...");
         Voxel currentVoxel = destination;
         while (currentVoxel != start){
-            System.out.print(currentVoxel.getCoordinates()+" ");
-            currentVoxel = destination.previousVertex;
+            System.out.print(currentVoxel.getCoordinates()+" --> ");
+            currentVoxel = currentVoxel.previousVertex;
         }
-        System.out.println("");
+        System.out.println(start.getCoordinates());
     }
     
     void debugPrintVertices(ArrayList<Voxel> voxels){
