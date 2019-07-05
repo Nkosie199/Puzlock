@@ -242,6 +242,7 @@ public class Puzlock {
                     }
                 }
             }
+            //should debug print the removable piece here, remember to ensure that the anchor is not added...
             removablePieces.add(removablePiece); //store the removable piece
         }
 
