@@ -22,6 +22,7 @@ public class Puzlock {
     static ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(Nb2); //stores the Nb2 number of adjacent voxel pairs
     static int bfsi = 1; //an iterator for breadthFirstTraversal2
     static ShortestPath sp;
+    static ArrayList<ArrayList> shortestPathCandidates = new ArrayList<>();; //an array which stores the set of voxels in a shortest path
     static ArrayList<Voxel> removablePiece = new ArrayList<>(); //stores piece given by the shortest path which have been made removable by adding the voxels above them
     static ArrayList<ArrayList> removablePieces = new ArrayList<>(); //stores all the removable pieces
     
@@ -42,6 +43,8 @@ public class Puzlock {
         //1.3. Ensure blocking and mobility
         System.out.println("1.3. Ensuring blocking and mobility...");
         ensureBlockingMobility();
+        System.out.println("1.4. Expand the key piece...");
+        expandKeyPiece();
         System.out.println("\nCOMPLETE!");
     }
 
@@ -171,14 +174,14 @@ public class Puzlock {
         Among them, we select Nb2 pairs whose blockee has the smallest accessibility among the Nb1 pairs (in their omplementation Nb1 and Nb2 are set to 50 and 10 respectively). */
         breadthFirstTraversal(); //for the purpose of storing the the Nb1 number of voxel pairs in the voxelPairs array
         //now we can select the Nb2 number of pairs whose blockee has the smallest accessibility value...
-        System.out.println("\nSelecting the Nb2 number of pairs amoing "+voxelPairs.size()+" pairs...");
+        System.out.println("\nSelecting "+Nb2+" pairs among "+voxelPairs.size()+" pairs...");
         //algorithm: store all blockees in an array sorted by accessibility value (minimum to maximum) and select the first Nb2 number of blockees..
         ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
         ArrayList<VoxelPair> accessibleVoxelPairs = new ArrayList(); //stores the voxel pairs with the lowest accessibility values
         double maxAccVal = 0; //stores the maximum accessibility value
         for (VoxelPair p: voxelPairs) {
-            Voxel v = p.getVoxel2();
-            accVals.add(v.accessibilityValue);
+            Voxel v = p.getVoxel2(); //get each blockee voxel
+            accVals.add(v.accessibilityValue); //add its accessibility value
         }
         Collections.sort(accVals); //sorts the stores accessibility values
         maxAccVal = accVals.get(Nb2-1);
@@ -221,30 +224,16 @@ public class Puzlock {
             //must clone the array to prevent the concurrency issue
             ArrayList<Voxel> voxels3 = (ArrayList)voxels2.clone();
             sp = new ShortestPath(voxels3, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
+            shortestPathCandidates.add(sp.currentShortestPath); //finally, add the shortest path to the list of shortest path candidates
+            makeRemovable(sp.currentShortestPath, sp.anchorVoxel); //make the piece removable
         }
         
+        System.out.println("\n");
         /* • Ensure the key to be removable upward by including any voxel above the selected shortest path. 
         This is why the shortest paths determined in the strategy above should not go through the blocking voxel or any voxel below it, 
         else the blockage is destructed. 
         Moreover, we ignore the shortest path candidates that eventually add excessive voxels since the key should less than m voxels. */
-        ArrayList<ArrayList> spCandidates = sp.shortestPathCandidates; //get the set of shortest path candidates
-        //make the key piece removable then expand the key piece (next method)...
-        //NOTE: we should perhaps move this code to a method in the ShortestPath class (for proper addeding of voxels which make pieces romovable excluding the anchor)...
-        for (int i=0; i<spCandidates.size(); i++) { //for each shortest path candidate...
-            ArrayList<Voxel> shortestPath = spCandidates.get(i);
-            //add all the voxels above the current set of voxels...
-            for (int j=0; j<shortestPath.size(); j++){ //for each voxel in the path
-                Voxel currentVoxel = shortestPath.get(j);
-                removablePiece.add(currentVoxel); //add the current voxel
-                for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
-                    if (k<currentVoxel.y){ //if y co-ordinate is less than that of the current voxel i.e. on top of it 
-                        removablePiece.add(currentVoxel); //add it to the set of candidate voxels (represented in figure 9(e))
-                    }
-                }
-            }
-            //should debug print the removable piece here, remember to ensure that the anchor is not added...
-            removablePieces.add(removablePiece); //store the removable piece
-        }
+        
 
         /* • Devise a key that moves upward but not along vn. However, since new voxels are added to the key, 
         the key may accidentally become mobilized in a direction along which the seed was originally blocked (eg. +X, -Y, +/-Z). 
@@ -254,23 +243,41 @@ public class Puzlock {
         the key can remain to be immobilized in the blocked directions even if we add more voxels to it. 
         Mobility test is not required to ensure the maintenance of the blockage. */
 
-        /* • To choose among the shortest paths resulted from the first two strategies, we sum for each path the accessibility of all the voxels required to be added to the key, 
-        i.e., voxels along the path, the blockee, and any voxel above. Then, we pick the one with the smallest accessibility sum for evolving the key with the appropriate blockage. */ 
+        /* • To choose among the shortest paths resulted from the first two strategies, we sum for each path the accessibility of all the voxels 
+        required to be added to the key, i.e., voxels along the path, the blockee, and any voxel above. 
+        Then, we pick the one with the smallest accessibility sum for evolving the key with the appropriate blockage. */
+        //find the piece with the smallest sum of accessibility values...
     }
 
     //1.4. Expand the key piece
-    void expandKeyPiece(){
+    static void expandKeyPiece(){
         /* • Identify an additional anchor voxel for the direction immobilized by the blocking voxel picked in step 3 – it is furthest away from the blocking voxel in direction vn; 
         if no such voxels exist, we use the blocking voxel as the anchor; note that the anchor voxel idea is crucial for the expansion process as the existing blockage 
         could be undesirably destructed if an anchor voxel in inappropriately added to the key piece. */
+        //store the additional anchor
 
         /* • Identify a set of candidate voxels to be added to the key, say {ui}, that are resided next to the key but neither at the anchor voxels nor below the anchors. 
         For each ui, we identify also the voxels directly above it, so we know the voxels required to be added to the key if ui is chosen. 
         Furthermore, if the number of voxels exceeds the number of extra voxels the key needs, we remove ui, from the candidate set. */
 
-        /* • Sum the accessibility of each ui and the voxels above it, say sumi, and normalize pi = sumi^(-β) to be p2i = pi/∑ipi, where β is a parameter ranged from 1 to 6. 
-        Hence, we can randomly pick a ui with p2i as the probability of choosing it, and expand the key piece. These substeps are repeated until the key contains roughly m voxels. */
+        /* • Sum the accessibility of each ui and the voxels above it, say sumi, and normalize pi = sumi^(-β) to be p2i = pi/∑ipi, 
+        where β is a parameter ranged from 1 to 6. 
+        Hence, we can randomly pick a ui with p2i as the probability of choosing it, and expand the key piece. 
+        These substeps are repeated until the key contains roughly m voxels. */
+        double beta = 2; //stores β, which has a value ranging from 1 to 6 eg. 2
+        ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
+        //for each removable puzzle piece...
+        double pi = Math.pow(sumOfAccessVals(removablePiece), -beta); //pi = sumi^(-β)
     }  
+    
+    static double sumOfAccessVals(ArrayList<Voxel> piece){
+        double sum = 0;
+        for (Voxel v: piece) {
+            sum = sum + v.accessibilityValue;
+        }
+        System.out.println("Sum of accessibility values is: "+sum);
+        return sum;
+    }
 
     //1.5. Confirm the key piece
     void confirmKeyPiece(){
@@ -435,12 +442,12 @@ public class Puzlock {
     static Voxel getUp(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x][y+1][z] == 1){ 
-                int index = indexOfCoordinate(x, y+1, z);
+            if (inputVoxelizedMesh[x][y-1][z] == 1){ 
+                int index = indexOfCoordinate(x, y-1, z);
                 Voxel v = voxels.get(index);
                 int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
-                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y+1)+", "+z)){
-                    System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
+                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y-1)+", "+z)){
+                    System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
                     System.out.println("");
                 }
@@ -454,12 +461,12 @@ public class Puzlock {
     static Voxel getDown(int x, int y, int z){
         //it will either be 0, 1 or null
         try{
-            if (inputVoxelizedMesh[x][y-1][z] == 1){
-                int index = indexOfCoordinate(x, y-1, z);
+            if (inputVoxelizedMesh[x][y+1][z] == 1){
+                int index = indexOfCoordinate(x, y+1, z);
                 Voxel v = voxels.get(index);
                 int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
-                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y-1)+", "+z)){
-                    System.out.println("ERROR! Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
+                if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y+1)+", "+z)){
+                    System.out.println("ERROR! Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
                     System.out.println("");
                 }
@@ -547,7 +554,6 @@ public class Puzlock {
                 neighbours++;
             }
         }catch(Exception e){}
-
         return neighbours;
     }
     
@@ -713,7 +719,6 @@ public class Puzlock {
                 if ((!visitedAdjacentVoxels.contains(v))){ //if some neighbour has not been visited
                     breadthFirstTraversal2(v, normalDir); //visit their neighbours
                 }
-                
             }
         }
         else if (normalDir.equals("forward")){
@@ -754,7 +759,6 @@ public class Puzlock {
                 if ((!visitedAdjacentVoxels.contains(v))){ //if some neighbour has not been visited
                     breadthFirstTraversal2(v, normalDir); //visit their neighbours
                 }
-                
             }
         }
         else if (normalDir.equals("backward")){
@@ -795,7 +799,6 @@ public class Puzlock {
                 if ((!visitedAdjacentVoxels.contains(v))){ //if some neighbour has not been visited
                     breadthFirstTraversal2(v, normalDir); //visit their neighbours
                 }
-                
             }
         }
     }
@@ -810,75 +813,26 @@ public class Puzlock {
         }
     }
     
-    /* computes the shortest path from A to B */
-    static void shortestPath(Voxel source, Voxel blockee, Voxel blocking){
-        //where the seed is the starting point, the blockee is the destination, and the blocking is the voxel to avoid...
-        //check the neighbours and try to get closer to without going down...
-        if (source.x < blockee.x){
-            //if the blockee's x co-ordinate is greater than the seed's, go right
-            Voxel rightNeighbour = getRight(source.x, source.y, source.z);
-            if (!rightNeighbour.getCoordinates().equals(blocking.getCoordinates())){
-                //only if the blocking is not right
-                System.out.print("Right to "+rightNeighbour.getCoordinates()+"...");
-                if (!rightNeighbour.equals(blockee)){
-                    //recurse if source is not equal to blockee
-                    shortestPath(rightNeighbour, blockee, blocking);
-                }
-            }
-            else{
-                //if the blocking IS right, try to go around it...
-                
-            }
-        }
-        if (source.x > blockee.x){
-            //if the blockee's x co-ordinate is less than the seed's, go left
-            Voxel leftNeighbour = getLeft(source.x, source.y, source.z);
-            if (!leftNeighbour.getCoordinates().equals(blocking.getCoordinates())){
-                //only if the blocking is not left
-                System.out.print("Left to "+leftNeighbour.getCoordinates()+"...");
-                if (!leftNeighbour.equals(blockee)){
-                    //recurse if source is not equal to blockee
-                    shortestPath(leftNeighbour, blockee, blocking);
+    /* takes in a set of voxels (in a path) and an anchor voxel to make 1 puzzle piece, removable by adding the voxels above it (excluding the anchor voxel)*/
+    static void makeRemovable(ArrayList<Voxel> path, Voxel anchor){
+        //make the key piece removable then expand the key piece (next method)...
+        //add all the voxels above the current set of voxels...
+        System.out.println("Making piece removable. Anchor voxel is at "+anchor.getCoordinates());
+        for (int j=0; j<path.size(); j++){ //for each voxel in the path
+            Voxel currentVoxel = path.get(j);
+            if ((!removablePiece.contains(currentVoxel)) ){ //if the current voxel is not already in the piece and it is not the anchor
+                removablePiece.add(currentVoxel); //add the current voxel
+                System.out.print(currentVoxel.getCoordinates()+"(in path); ");
+                for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
+                    Voxel above = getUp(currentVoxel.x, k, currentVoxel.z);
+                    if ((above != null) && (!removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
+                        removablePiece.add(above); //add it to the set of candidate voxels (represented in figure 9(e))
+                        System.out.print(above.getCoordinates()+"(on top); ");
+                    }
                 }
             }
         }
-        if (source.y < blockee.y){
-            //if the blockee's y co-ordinate is greater than the seed's, go up
-            Voxel upNeighbour = getUp(source.x, source.y, source.z);
-            if (!upNeighbour.getCoordinates().equals(blocking.getCoordinates())){
-                //only if the blocking is not up
-                System.out.print("Up to "+upNeighbour.getCoordinates()+"...");
-                if (!upNeighbour.equals(blockee)){
-                    //recurse if source is not equal to blockee
-                    shortestPath(upNeighbour, blockee, blocking);
-                }
-            }
+        //should debug print the removable piece here, remember to ensure that the anchor is not added...
+        removablePieces.add(removablePiece); //store the removable piece
         }
-        if (source.z < blockee.z){
-            //if the blockee's z co-ordinate is greater than the seed's, go forward
-            Voxel forwardNeighbour = getForward(source.x, source.y, source.z);
-            if (!forwardNeighbour.getCoordinates().equals(blocking.getCoordinates())){
-                //only if the blocking is not forward
-                System.out.print("Forward to "+forwardNeighbour.getCoordinates()+"...");
-                if (!forwardNeighbour.equals(blockee)){
-                    //recurse if source is not equal to blockee
-                    shortestPath(forwardNeighbour, blockee, blocking);
-                }
-            }
-        }
-        if (source.z > blockee.z){
-            //if the blockee's z co-ordinate is less than the seed's, go backward
-            Voxel backwardNeighbour = getBackward(source.x, source.y, source.z);
-            if (!backwardNeighbour.getCoordinates().equals(blocking.getCoordinates())){
-                //only if the blocking is not backward
-                System.out.print("Backward to "+backwardNeighbour.getCoordinates()+"...");
-                if (!backwardNeighbour.equals(blockee)){
-                    //recurse if source is not equal to blockee
-                    shortestPath(backwardNeighbour, blockee, blocking);
-                }
-            }
-        }
-        
-    }
-    
 }
