@@ -10,8 +10,7 @@ public class ShortestPath {
     ArrayList<Voxel> visitedVoxels; //the set of unvisited nodes
     ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //the set of visited nodes
     int maxDistance = 1000000; //represents the maximum distance (which is set upon initialization) i.e. infinity. Must be > total number of voxels
-    ArrayList currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
-    ArrayList<ArrayList> shortestPathCandidates = new ArrayList<>();; //an array which stores the set of voxels in a shortest path
+    static ArrayList currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
     static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal diraction
     
     /* takes in the voxel array, source (seed), destination (blockee) and the blocking voxel*/
@@ -78,13 +77,13 @@ public class ShortestPath {
             }
             //now that we have all the appropriate values as per the table in Djikstra's algorithm, show us the shortest path...
         }
-        System.out.println("Debug printing all visited voxels as vertices...");
-        debugPrintVertices(visitedVoxels);
+//        System.out.println("Debug printing all visited voxels as vertices...");
+//        debugPrintVertices(visitedVoxels);
         getShortestPath(source, destination); //prints out the path from source to destination in terms of which voxel co-ordinates must be visited 
     }
     
     void getShortestPath(Voxel start, Voxel destination){
-        System.out.println("Printing the path from destination to source...");
+        System.out.println("Printing the path from source to destination...");
         currentShortestPath = new ArrayList<>();
         Voxel currentVoxel = destination;
         while (currentVoxel != start){
@@ -95,7 +94,7 @@ public class ShortestPath {
         currentShortestPath.add(start);
         System.out.println(start.getCoordinates());
         setAnchorVoxel(currentShortestPath); //set the anchor voxel among the set of voxels in the current shortest path
-        shortestPathCandidates.add(currentShortestPath); //finally, add the shortest path to the list of shortest path candidates
+        
         
     }
     
