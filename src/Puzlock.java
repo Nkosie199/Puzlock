@@ -26,23 +26,23 @@ public class Puzlock {
     static int bfsi = 1; //an iterator for breadthFirstTraversal2
     static ShortestPath sp;
 //    static ArrayList<ShortestPath> shortestPathCandidates = new ArrayList<>();; //an array which stores the set of ShortestPath objects
-    static ArrayList<Voxel> removablePiece; //stores piece given by the shortest path which have been made removable by adding the voxels above them
     static ArrayList<ArrayList> removablePieces = new ArrayList<>(); //stores all the removable pieces
-    static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
-    static Voxel anchorVoxel2; //stores the second anchor voxel as per section 4
+//    static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
+//    static Voxel anchorVoxel2; //stores the second anchor voxel as per section 4
     static int N; //stores the total # of voxels
     static int K; //stores the total # of pieces (K < N < 4)
     static int m; //stores the average number of voxels per puzzle piece i.e. m = N(total # of voxels)/K(total # of pieces)
     static ArrayList<Voxel> selectedPiece; //stores the currently selected piece as per the ShortestPath class
     static Voxel blocking; //stores the current blocking voxel as per the ShortestPath class
+    static ArrayList<PuzzlePiece> puzzlePieces = new ArrayList<>(); //stores the set of puzzle pieces
     
     public static void main(String[] args){ 
         //0.1. Read the 3D grid
         inputVoxelizedMesh = readVoxelizedMesh();
         //0.2. Initialize the 1D array representing the 3D grid/array
         initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array
-        debugPrintVoxelizedMesh(inputVoxelizedMesh);
-        debugPrintVoxels(voxels);
+//        debugPrintVoxelizedMesh(inputVoxelizedMesh);
+//        debugPrintVoxels(voxels);
         sc = new Scanner(System.in);
         N = voxels.size();
         System.out.println("Your input contains "+N+" voxels. Type in the number of puzzle pieces required: "); //eg. 8 pieces for a 4^3 voxel cube
@@ -189,7 +189,6 @@ public class Puzlock {
             }
             System.out.println("");
         }
-
     }
 
     //1.3. Ensure blocking and mobility
@@ -222,8 +221,7 @@ public class Puzlock {
             if ((d <= maxAccVal) && (!accessibleVoxelPairs.contains(q))){
                 accessibleVoxelPairs.add(q); //add it to the list of Nb2 voxel pairs
                 if (accessibleVoxelPairs.size() == Nb2){
-                    //if the list of accessible voxel pairs is large enough, break out of the loop
-                    break;
+                    break; //if the list of accessible voxel pairs is large enough, break out of the loop
                 }
             }
         }
@@ -239,19 +237,16 @@ public class Puzlock {
             System.out.println("Shortest path from "+seedVoxel.getCoordinates()+" to "+blockee.getCoordinates()+" where blocking voxel is at "+blocking.getCoordinates()+" and normal direction is "+seedVoxel.normalDirection+"...");
             ArrayList<Voxel> voxels3 = (ArrayList)voxels2.clone(); //must clone the array to prevent the concurrency issue
             sp = new ShortestPath(voxels3, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
-//            shortestPathCandidates.add(sp); //finally, add the shortest path array of voxels to the list of shortest path candidates
+            //create new puzzle piece based on the removable piece and add it to the set of stored pieces in Puzlock...
+            puzzlePieces.add(new PuzzlePiece(sp.removablePiece, sp.anchorVoxel, sp.anchorVoxel2, blocking, blockee));
         }
         /* • Block the key from moving towards vn by 
         (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate 
         (without crossing the related blocking voxel and voxels below it); 
         we later will select one of them for evolving the key; and 
         (ii) extract all the voxels along a selected shortest path until the blockee, and adding these voxels to evolve the key piece. */
+        //done in ShortestPath class referenced in the for-loop above...
         
-        //now we will compute the shortest path to each blockee, without crossing the blocker or going beneath it...
-        //the following methods should be called only once...
-        
-        setAnchorVoxel2(anchorVoxel, blocking, selectedPiece); //sets the second accessibility value from the selected piece
-        System.out.println("\n");
         /* • Ensure the key to be removable upward by including any voxel above the selected shortest path. 
         This is why the shortest paths determined in the strategy above should not go through the blocking voxel or any voxel below it, 
         else the blockage is destructed. 
@@ -284,18 +279,21 @@ public class Puzlock {
         /* • Identify a set of candidate voxels to be added to the key, say {ui}, that are resided next to the key but neither at the anchor voxels nor below the anchors. 
         For each ui, we identify also the voxels directly above it, so we know the voxels required to be added to the key if ui is chosen. 
         Furthermore, if the number of voxels exceeds the number of extra voxels the key needs, we remove ui, from the candidate set. */
+        //done by addVoxels method of this class...
         ArrayList<Voxel> addedVoxels = new ArrayList<>(); //stores the set of candidate voxels to be added to the key (neighbours but not below the anchors)
-        //iterate through the neighbouring voxels of the selected piece, adding until size == m...
-        addedVoxels = (ArrayList)selectedPiece.clone();
-        System.out.println("Debug printing the currently added voxels given that the anchor is at "+anchorVoxel.getCoordinates()+" and anchor2 is at "+anchorVoxel2.getCoordinates());
+        addedVoxels = (ArrayList)selectedPiece.clone(); //initialized to the selected piece
+        System.out.println("Debug printing the removable piece...");
         debugPrintVoxels(addedVoxels);
+        ArrayList addedVoxels2 = addVoxels(addedVoxels);
+        System.out.println("Debug print the new piece with added voxels...");
+        debugPrintVoxels(addedVoxels2);
 
         /* • Sum the accessibility of each ui and the voxels above it, say sumi, and normalize pi = sumi^(-β) to be pi2 = pi/∑ipi, 
         where β is a parameter ranged from 1 to 6. 
         Hence, we can randomly pick a ui with p2i as the probability of choosing it, and expand the key piece. 
         These substeps are repeated until the key contains roughly m voxels. */
 //        double beta = 2; //stores β, which has a value ranging from 1 to 6 eg. 2
-////        ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
+//        ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
 //        //for each removable puzzle piece...
 //        double sum = sumOfAccessVals(removablePiece);
 //        double pi = Math.pow(sum, -beta); //pi = sumi^(-β) i.e. the weighted sum
@@ -434,7 +432,7 @@ public class Puzlock {
     static void debugPrintVoxels(ArrayList<Voxel> voxels){
         for (int i=0; i<voxels.size(); i++) {
             Voxel v = voxels.get(i);
-            System.out.println(i+") "+v+" is at "+v.x+", "+v.y+", "+v.z);
+            System.out.println(i+") "+v+" is at "+v.x+","+v.y+","+v.z);
         }
         System.out.println("");
     }
@@ -835,147 +833,57 @@ public class Puzlock {
         return sum;
     }
     
-    /* takes in the first anchor voxel, the blocking voxel, and the currently selected piece (lowest sum of accessibility values); sets the second anchor voxel */
-    static void setAnchorVoxel2(Voxel anchor, Voxel blocking, ArrayList<Voxel> path){
-        //get the side opposite to the seed's normal direction...
-        Voxel seed = seedVoxel;//stores the seed voxel
-        String normalDir = seed.normalDirection;
-        int noOfCandidates = path.size();
-        if (normalDir.equals("left")){
-            //then we want to pick the voxel to the far right...
-            System.out.print("Among "+noOfCandidates+" candidates. ");
-            System.out.println("Picking anchor2 at the far right...");
-            int rightness = 0; //indicates the position of the rightest voxel, initialized as left i.e. 0 (left)
-            for (int i=1; i<(noOfCandidates-1); i++){ //for each voxel excluding the source and destination voxels
-                Voxel currentVoxel = path.get(i); //get the current voxel
-                //make sure it is on the same y (and z???)
-                if ((currentVoxel != anchor) && (currentVoxel.y == seed.y) && (currentVoxel.x >= seed.x) && (currentVoxel.x > rightness)){ 
-                    //if current voxel is not the anchor voxel, on the same y co-ordinate of the seed and to the right of the seed and more right than any other
-                    anchorVoxel = anchor; //we might as well set the selected piece's anchors here
-                    anchorVoxel2 = currentVoxel;
-                    rightness = currentVoxel.x; //update the rightest position
+   static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels){
+        for (PuzzlePiece p: puzzlePieces) { //find piece p...
+//            System.out.println("Selected piece is: "); debugPrintVoxels(addedVoxels); System.out.println(". Current piece is: "); debugPrintVoxels(p.piece);
+            if (p.piece.equals(addedVoxels)){
+                Voxel anchor = p.anchorVoxel;
+                Voxel anchor2 = p.anchorVoxel2;
+                System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates()); 
+                while ((addedVoxels.size()<m)){
+                    for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
+                        Voxel currentVoxel = addedVoxels.get(i);
+                        if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors
+                            //add neighbouring voxels (excluding the anchors or beneath them) until addedVoxels.size() > m...
+                            Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+                            Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+                            Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                            Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                            Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                            Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                            if ((!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained
+                                addedVoxels.add(leftNeighbour);
+                                break; //assuming new voxels are added to the end of the list, breaking here should work
+//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
+                            }if ((!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained
+                                addedVoxels.add(rightNeighbour);
+                                break;
+//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
+                            }if ((!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained
+                                addedVoxels.add(upNeighbour);
+                                break;
+//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
+                            }if ((!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
+                                //if there is a down neighbour which is not already contained and if it does not have a y-coordinate greater that either anchor given the same x and z
+                                addedVoxels.add(downNeighbour);
+                                break;
+//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
+                            }if ((!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained
+                                addedVoxels.add(forwardNeighbour);
+                                break;
+//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
+                            }if ((!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained
+                                addedVoxels.add(backwardNeighbour);
+                                break;
+//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
+                            }
+//                            return addVoxels(addedVoxels); //recurse with the new set of added voxels to possibly add more until addedVoxels.size() > m
+                        }
+                    }
                 }
-            }
-            if (anchorVoxel2 != null){
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }else{
-                anchorVoxel = anchor; 
-                anchorVoxel2 = blocking; //set the anchor voxel to the blocking voxel
-                selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }
-        }else if (normalDir.equals("right")){
-            //then we want to pick the voxel to the far left...
-            System.out.print("Among "+noOfCandidates+" candidates. ");
-            System.out.println("Picking anchor2 at the far left...");
-            int leftness = inputVoxelizedMeshSize; //indicates the position of the rightest voxel, initialized as right i.e. inputVoxelizedMeshSize
-            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
-                Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel != anchor) && (currentVoxel.y == seed.y) && (currentVoxel.x <= seed.x) && (currentVoxel.x < leftness)){ 
-                    //if current voxel is not the anchor voxel, on the same y co-ordinate of the seed and to the left of the seed and more left than any other
-                    anchorVoxel = anchor; 
-                    anchorVoxel2 = currentVoxel;
-                    leftness = currentVoxel.x; //update the leftest position
-                }
-            }
-            if (anchorVoxel2 != null){
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }else{
-                anchorVoxel = anchor; 
-                anchorVoxel2 = blocking; //set the anchor voxel to the blocking voxel
-                selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }
-        }else if (normalDir.equals("up")){
-            System.out.print("Among "+noOfCandidates+" candidates. ");
-            System.out.println("Picking anchor2 at the far top...");
-            //then we want to pick the voxel to the far bottom...
-            int bottomness = 0; //indicates the position of the lowest voxel, initialized as bottom i.e. 0 (top)
-            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
-                Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel != anchor) && (currentVoxel.y >= seed.y) && (currentVoxel.y > bottomness)){ 
-                    //if current voxel is not the anchor voxel, on the same y co-ordinate of the seed or lower and the lowest
-                    anchorVoxel = anchor; 
-                    anchorVoxel2 = currentVoxel;
-                    selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                    bottomness = currentVoxel.y; //update the bottomest position
-                }
-            }
-            if (anchorVoxel2 != null){
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }else{
-                anchorVoxel = anchor; 
-                anchorVoxel2 = blocking; //set the anchor voxel to the blocking voxel
-                selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }
-        }else if (normalDir.equals("down")){
-            System.out.print("Among "+noOfCandidates+" candidates. ");
-            System.out.println("Picking anchor2 at the far bottom...");
-            //then we want to pick the voxel to the far top...
-            int topness = inputVoxelizedMeshSize;; //indicates the position of the topest voxel, initialized as bottom i.e. inputVoxelizedMeshSize
-            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
-                Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel != anchor) && (currentVoxel.y <= seed.y) && (currentVoxel.y < topness)){ 
-                    //if current voxel is not the anchor voxel, on the same y co-ordinate of the seed or higher and the highest
-                    anchorVoxel = anchor; 
-                    anchorVoxel2 = currentVoxel;
-                    topness = currentVoxel.y; //update the topest position
-                }
-            }
-            if (anchorVoxel2 != null){
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }else{
-                anchorVoxel = anchor; 
-                anchorVoxel2 = blocking; //set the anchor voxel to the blocking voxel
-                selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }
-        }else if (normalDir.equals("forward")){
-            System.out.print("Among "+noOfCandidates+" candidates. ");
-            System.out.println("Picking anchor2 at the far back...");
-            //then we want to pick the voxel to the far back...
-            int backness = inputVoxelizedMeshSize; //indicates the position of the backest voxel, initialized as forward i.e. inputVoxelizedMeshSize
-            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
-                Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel != anchor) && (currentVoxel.y == seed.y) && (currentVoxel.z <= seed.z) && (currentVoxel.z < backness)){ 
-                    //if current voxel is not the anchor voxel, on the same y co-ordinate of the seed and to the right of the seed and more right than any other
-                    anchorVoxel = anchor; 
-                    anchorVoxel2 = currentVoxel;
-                    backness = currentVoxel.z; //update the backest position
-                }
-            }
-            if (anchorVoxel2 != null){
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }else{
-                anchorVoxel = anchor; 
-                anchorVoxel2 = blocking; //set the anchor voxel to the blocking voxel
-                selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }
-        }else if (normalDir.equals("backward")){
-            System.out.print("Among "+noOfCandidates+" candidates. ");
-            System.out.println("Picking anchor2 at the far front...");
-            //then we want to pick the voxel to the far front...
-            int forwardness = 0; //indicates the position of the forwardest voxel, initialized as back i.e. 0
-            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
-                Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel != anchor) && (currentVoxel.y == seed.y) && (currentVoxel.z >= seed.z) && (currentVoxel.z > forwardness)){ 
-                    //if current voxel is not the anchor voxel, on the same y co-ordinate of the seed and to the right of the seed and more right than any other
-                    anchorVoxel = anchor; 
-                    anchorVoxel2 = currentVoxel;
-                    forwardness = currentVoxel.z; //update the forwardest position
-                }
-            }
-            if (anchorVoxel2 != null){
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
-            }else{
-                anchorVoxel = anchor; 
-                anchorVoxel2 = blocking; //set the anchor voxel to the blocking voxel
-                selectedPiece.add(anchorVoxel2); //add the anchor (blocking) voxel to the selected piece
-                System.out.println("Anchor2 is at "+anchorVoxel2.getCoordinates()); //debug print the anchor voxel
             }
         }
-    }
+        return addedVoxels;
+   }
     
 }
