@@ -6,12 +6,13 @@ import java.util.ArrayList;
  */
 
 public class ShortestPath { 
-    Puzlock puzlock = new Puzlock(); //we will need some Puzlock methods to get the current neighbours etc
+    static Puzlock puzlock = new Puzlock(); //we will need some Puzlock methods to get the current neighbours etc
     ArrayList<Voxel> visitedVoxels; //the set of unvisited nodes
     ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //the set of visited nodes
     int maxDistance = 1000000; //represents the maximum distance (which is set upon initialization) i.e. infinity. Must be > total number of voxels
     static ArrayList currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
-    static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal diraction
+    static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
+    static ArrayList<Voxel> selectedPiece; //stores the currently selected piece woth the smallest sum of accessibility values
     
     /* takes in the voxel array, source (seed), destination (blockee) and the blocking voxel*/
     public ShortestPath(ArrayList<Voxel> voxels, Voxel source, Voxel destination, Voxel blocking){
@@ -19,7 +20,6 @@ public class ShortestPath {
         visitedVoxels = new ArrayList<>();
         unvisitedVoxels = (ArrayList)voxels.clone(); //since all nodes are initially unvisted; beware of the shrinking list concurrency problem by ensuring Puzlock.voxels does not shrink
         unvisitedVoxels.remove(blocking); //remove the blocking voxel from the set of unvisited voxels
-        
         //initialize the source vertex
         source.shortestDistanceFromSource = 0;
         source.previousVertex = null;
@@ -80,6 +80,9 @@ public class ShortestPath {
 //        System.out.println("Debug printing all visited voxels as vertices...");
 //        debugPrintVertices(visitedVoxels);
         getShortestPath(source, destination); //prints out the path from source to destination in terms of which voxel co-ordinates must be visited 
+        setAnchorVoxel(currentShortestPath); //set the anchor voxel among the set of voxels in the current shortest path
+        makeRemovable(currentShortestPath, anchorVoxel); //make the piece removable by adding voxels above non-anchor voxels
+        selectPiece(anchorVoxel, blocking); //returns the piece with the smallest sum of accessibility values and sets the anchors in the Puzlock class
     }
     
     void getShortestPath(Voxel start, Voxel destination){
@@ -93,9 +96,6 @@ public class ShortestPath {
         }
         currentShortestPath.add(start);
         System.out.println(start.getCoordinates());
-        setAnchorVoxel(currentShortestPath); //set the anchor voxel among the set of voxels in the current shortest path
-        
-        
     }
     
     void setAnchorVoxel(ArrayList<Voxel> path){
@@ -108,18 +108,18 @@ public class ShortestPath {
             System.out.print("Among "+noOfCandidates+" candidates. ");
             System.out.println("Picking an anchor at the far right...");
             int rightness = 0; //indicates the position of the rightest voxel, initialized as left i.e. 0 (left)
-            for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
+            for (int i=1; i<(noOfCandidates-1); i++){ //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
                 //make sure it is on the same y (and z???)
-                if ((currentVoxel.y == seed.y) && (currentVoxel.x > seed.x) && (currentVoxel.x > rightness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
+                if ((currentVoxel.y == seed.y) && (currentVoxel.x >= seed.x) && (currentVoxel.x > rightness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
                     rightness = currentVoxel.x; //update the rightest position
                 }
             }
             if (anchorVoxel != null){
-                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+//                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
             }else{
-                System.out.println("Anchor voxel is null");
+                System.out.println("ERROR: Anchor voxel is null");
             }
         }else if (normalDir.equals("right")){
             //then we want to pick the voxel to the far left...
@@ -128,15 +128,15 @@ public class ShortestPath {
             int leftness = puzlock.inputVoxelizedMeshSize; //indicates the position of the rightest voxel, initialized as right i.e. inputVoxelizedMeshSize
             for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel.y == seed.y) && (currentVoxel.x < seed.x) && (currentVoxel.x < leftness)){ //if current voxel is on the same y co-ordinate of the seed and to the left of the seed and more left than any other
+                if ((currentVoxel.y == seed.y) && (currentVoxel.x <= seed.x) && (currentVoxel.x < leftness)){ //if current voxel is on the same y co-ordinate of the seed and to the left of the seed and more left than any other
                     anchorVoxel = currentVoxel;
                     leftness = currentVoxel.x; //update the leftest position
                 }
             }
             if (anchorVoxel != null){
-                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+//                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
             }else{
-                System.out.println("Anchor voxel is null");
+                System.out.println("ERROR: Anchor voxel is null");
             }
         }else if (normalDir.equals("up")){
             System.out.print("Among "+noOfCandidates+" candidates. ");
@@ -151,9 +151,9 @@ public class ShortestPath {
                 }
             }
             if (anchorVoxel != null){
-                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+//                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
             }else{
-                System.out.println("Anchor voxel is null");
+                System.out.println("ERROR: Anchor voxel is null");
             }
         }else if (normalDir.equals("down")){
             System.out.print("Among "+noOfCandidates+" candidates. ");
@@ -168,9 +168,9 @@ public class ShortestPath {
                 }
             }
             if (anchorVoxel != null){
-                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+//                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
             }else{
-                System.out.println("Anchor voxel is null");
+                System.out.println("ERROR: Anchor voxel is null");
             }
         }else if (normalDir.equals("forward")){
             System.out.print("Among "+noOfCandidates+" candidates. ");
@@ -179,15 +179,15 @@ public class ShortestPath {
             int backness = puzlock.inputVoxelizedMeshSize; //indicates the position of the backest voxel, initialized as forward i.e. inputVoxelizedMeshSize
             for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel.y == seed.y) && (currentVoxel.z < seed.z) && (currentVoxel.z < backness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
+                if ((currentVoxel.y == seed.y) && (currentVoxel.z <= seed.z) && (currentVoxel.z < backness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
                     backness = currentVoxel.z; //update the backest position
                 }
             }
             if (anchorVoxel != null){
-                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+//                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
             }else{
-                System.out.println("Anchor voxel is null");
+                System.out.println("ERROR: Anchor voxel is null");
             }
         }else if (normalDir.equals("backward")){
             System.out.print("Among "+noOfCandidates+" candidates. ");
@@ -196,17 +196,65 @@ public class ShortestPath {
             int forwardness = 0; //indicates the position of the forwardest voxel, initialized as back i.e. 0
             for (int i=1; i<(noOfCandidates-1); i++) { //for each voxel excluding the source and destination voxels
                 Voxel currentVoxel = path.get(i); //get the current voxel
-                if ((currentVoxel.y == seed.y) && (currentVoxel.z > seed.z) && (currentVoxel.z > forwardness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
+                if ((currentVoxel.y == seed.y) && (currentVoxel.z >= seed.z) && (currentVoxel.z > forwardness)){ //if current voxel is on the same y co-ordinate of the seed and to the right of the seed and more right than any other
                     anchorVoxel = currentVoxel;
                     forwardness = currentVoxel.z; //update the forwardest position
                 }
             }
             if (anchorVoxel != null){
-                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
+//                System.out.println("Anchor voxel is at "+anchorVoxel.getCoordinates()); //debug print the anchor voxel
             }else{
-                System.out.println("Anchor voxel is null");
+                System.out.println("ERROR: Anchor voxel is null");
             }
         }
+    }
+    
+    
+    
+    /* takes in a set of voxels (in a path) and an anchor voxel to make 1 puzzle piece, removable by adding the voxels above it (excluding the anchor voxel)*/
+    static void makeRemovable(ArrayList<Voxel> path, Voxel anchor){
+        //make the key piece removable then expand the key piece (next method)...
+        //add all the voxels above the current set of voxels...
+        puzlock.removablePiece = new ArrayList<>(); 
+        System.out.println("Making piece removable. Anchor voxel is at "+anchor.getCoordinates());
+        for (int j=0; j<path.size(); j++){ //for each voxel in the path
+            Voxel currentVoxel = path.get(j);
+            if ((!puzlock.removablePiece.contains(currentVoxel)) ){ //if the current voxel is not already in the piece and it is not the anchor
+                puzlock.removablePiece.add(currentVoxel); //add the current voxel
+                System.out.print(currentVoxel.getCoordinates()+"(in path); ");
+                for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
+                    Voxel above = puzlock.getUp(currentVoxel.x, k, currentVoxel.z);
+                    if ((above != null) && (!puzlock.removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
+                        puzlock.removablePiece.add(above); //add it to the set of candidate voxels (represented in figure 9(e))
+                        System.out.print(above.getCoordinates()+"(on top); ");
+                    }
+                }
+            }
+        }
+        //should debug print the removable piece here, remember to ensure that the anchor is not added...
+        ArrayList<Voxel> rPiece = (ArrayList)puzlock.removablePiece.clone(); //clone the removable piece to avoid the concurrency issue
+        puzlock.removablePieces.add(rPiece); //store the removable piece
+        System.out.println("\n********************************************************************");
+    }
+    
+    /* find the piece with the smallest sum of accessibility values */
+    static ArrayList<Voxel> selectPiece(Voxel anchor, Voxel blocking){
+        selectedPiece = new ArrayList<>();
+        double currentHighestSum = 1000000; //stores the current lowest sum of accessibility values, initialized to 1000000
+        for (ArrayList rPiece: puzlock.removablePieces){
+            double currentSum = puzlock.sumOfAccessVals(rPiece);
+            if (currentSum<currentHighestSum){ //if current sum of accessibility values is the lowest
+                currentHighestSum = currentSum; //set the current highest sum to the current sum
+                selectedPiece = rPiece; //set the selected piece to the current piece
+                //update selectedPiece, the anchor, anchor2, and blocking voxels to those required by the Puzlock class...
+                puzlock.selectedPiece = selectedPiece;
+                puzlock.anchorVoxel = anchor;
+                puzlock.blocking = blocking;
+            }
+        }
+        return selectedPiece;
+//        System.out.println("Debug printing the selected piece with accessibility value = "+currentHighestSum+"...");
+//        debugPrintVoxels(selectedPiece); //debug print the selected piece
     }
     
     void debugPrintVertices(ArrayList<Voxel> voxels){
@@ -217,7 +265,6 @@ public class ShortestPath {
             }else{
                 System.out.println(i+") Voxel at "+v.getCoordinates()+": Shortest distance from source: "+v.shortestDistanceFromSource+", Previous vertex: "+v.previousVertex+" at "+v.previousVertex.getCoordinates());
             }
-            
         }
     }
 }

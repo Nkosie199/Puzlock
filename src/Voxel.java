@@ -18,5 +18,4 @@ public class Voxel {
     public String getCoordinates(){
         return x+","+y+","+z;
     }
-     
 }
