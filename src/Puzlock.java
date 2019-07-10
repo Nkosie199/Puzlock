@@ -292,12 +292,13 @@ public class Puzlock {
         where β is a parameter ranged from 1 to 6. 
         Hence, we can randomly pick a ui with p2i as the probability of choosing it, and expand the key piece. 
         These substeps are repeated until the key contains roughly m voxels. */
-//        double beta = 2; //stores β, which has a value ranging from 1 to 6 eg. 2
-//        ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
-//        //for each removable puzzle piece...
-//        double sum = sumOfAccessVals(removablePiece);
-//        double pi = Math.pow(sum, -beta); //pi = sumi^(-β) i.e. the weighted sum
-//        double pi2 = pi/(sum); //pi2 = pi/∑ipi, the normalization
+        //I AM HERE!!!
+        double beta = 2; //stores β, which has a value ranging from 1 to 6 eg. 2
+        ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
+        //for each removable puzzle piece...
+        double sum = sumOfAccessVals(addedVoxels2);
+        double pi = Math.pow(sum, -beta); //pi = sumi^(-β) i.e. the weighted sum
+        double pi2 = pi/(sum); //pi2 = pi/∑ipi, the normalization
     }  
 
     //1.5. Confirm the key piece
@@ -853,27 +854,33 @@ public class Puzlock {
                             Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
                             if ((!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained
                                 addedVoxels.add(leftNeighbour);
+                                addVoxels2(addedVoxels, leftNeighbour); //add the voxels above the added neighbour
                                 break; //assuming new voxels are added to the end of the list, breaking here should work
 //                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
                             }if ((!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained
                                 addedVoxels.add(rightNeighbour);
+                                addVoxels2(addedVoxels, rightNeighbour); //add the voxels above the added neighbour
                                 break;
 //                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
                             }if ((!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained
                                 addedVoxels.add(upNeighbour);
+                                addVoxels2(addedVoxels, upNeighbour); //add the voxels above the added neighbour
                                 break;
 //                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
                             }if ((!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
                                 //if there is a down neighbour which is not already contained and if it does not have a y-coordinate greater that either anchor given the same x and z
                                 addedVoxels.add(downNeighbour);
+                                addVoxels2(addedVoxels, downNeighbour); //add the voxels above the added neighbour
                                 break;
 //                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
                             }if ((!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained
                                 addedVoxels.add(forwardNeighbour);
+                                addVoxels2(addedVoxels, forwardNeighbour); //add the voxels above the added neighbour
                                 break;
 //                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
                             }if ((!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained
                                 addedVoxels.add(backwardNeighbour);
+                                addVoxels2(addedVoxels, backwardNeighbour); //add the voxels above the added neighbour
                                 break;
 //                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
                             }
@@ -884,6 +891,16 @@ public class Puzlock {
             }
         }
         return addedVoxels;
+   }
+   
+   /* takes in the set of added voxels and the current voxel. Adds the voxels on top of the current voxel and returns a new set of added voxels */
+   static ArrayList<Voxel> addVoxels2(ArrayList<Voxel> addedVoxels, Voxel currentVoxel){
+       Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+       if ((!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){
+           addedVoxels.add(voxel);
+           return addVoxels2(addedVoxels, upNeighbour); //recurse from the neighbour above
+       }
+       return addedVoxels;
    }
     
 }
