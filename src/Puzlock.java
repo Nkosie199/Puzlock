@@ -25,16 +25,16 @@ public class Puzlock {
     static ArrayList<VoxelPair> voxelPairs2 = new ArrayList<>(Nb2); //stores the Nb2 number of adjacent voxel pairs
     static int bfsi = 1; //an iterator for breadthFirstTraversal2
     static ShortestPath sp;
-//    static ArrayList<ShortestPath> shortestPathCandidates = new ArrayList<>();; //an array which stores the set of ShortestPath objects
     static ArrayList<ArrayList> removablePieces = new ArrayList<>(); //stores all the removable pieces
-//    static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
-//    static Voxel anchorVoxel2; //stores the second anchor voxel as per section 4
     static int N; //stores the total # of voxels
     static int K; //stores the total # of pieces (K < N < 4)
     static int m; //stores the average number of voxels per puzzle piece i.e. m = N(total # of voxels)/K(total # of pieces)
+    static int B = 3; //stores the Beta value described in section 5.1.4
     static ArrayList<Voxel> selectedPiece; //stores the currently selected piece as per the ShortestPath class
     static Voxel blocking; //stores the current blocking voxel as per the ShortestPath class
     static ArrayList<PuzzlePiece> puzzlePieces = new ArrayList<>(); //stores the set of puzzle pieces
+    static ArrayList<Voxel> keyPiece = new ArrayList();
+    static ArrayList<Voxel> setOfCandidates = new ArrayList<>(); //stores the set of candidate voxels to be added to keyPiece (addedVoxels)
     
     public static void main(String[] args){ 
         //0.1. Read the 3D grid
@@ -48,7 +48,9 @@ public class Puzlock {
         System.out.println("Your input contains "+N+" voxels. Type in the number of puzzle pieces required: "); //eg. 8 pieces for a 4^3 voxel cube
         K = sc.nextInt();
         m = N/K; //set m, required for establishing how many voxels to add/remove from the key piece
-        System.out.println("m has been set to "+m+"!");
+//        System.out.println("Please set a Beta value ranging from 1 to 6:"); //eg. 8 pieces for a 4^3 voxel cube
+//        B = sc.nextInt();
+        System.out.println("m has been set to "+m+". B has been set to "+B+"!");
         //1. Extacting the key piece...
         //1.1. Pick a seed voxel
         System.out.println("1.1. Picking a seed voxel...");
@@ -61,22 +63,24 @@ public class Puzlock {
         ensureBlockingMobility();
         //1.4. Expand the key piece
         System.out.println("1.4. Expand the key piece...");
-        expandKeyPiece();
+        keyPiece = expandKeyPiece();
         //1.5. Confirm the key piece
         System.out.println("1.5. Confirm the key piece...");
-        confirmKeyPiece();
+        confirmKeyPiece(keyPiece);
         //2. Extracting other puzzle pieces...
         //2.1. Candidate seed voxels
         //2.2. Create an initial Pi+1
         //2.3. Ensure local interlocking
         //2.4. Expand Pi+1 and Confirm it
         System.out.println("\nCOMPLETE!");
-//        System.out.println("\nCOMPLETE! Debug printing "+removablePieces.size()+" final puzzle pieces...");
-//        for (ArrayList<Voxel> rp: removablePieces) { //for each removable puzzle piece in the set of removable puzzle pieces
-//            setOutputPieces(rp); //represent a new puzzle piece in a 3D array
-//            debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
-//            System.out.println("-------------------------------------------------------------------------------------------");
-//        }
+//        debugPrintOutput(keyPiece);
+    }
+    
+    static void debugPrintOutput(ArrayList<Voxel> keyPiece){
+        System.out.println("\nCOMPLETE! Debug printing "+keyPiece.size()+" voxels of the final puzzle piece...");
+        setOutputPieces(keyPiece); //represent a new puzzle piece in a 3D array
+        debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
+        System.out.println("-------------------------------------------------------------------------------------------");
     }
 
     //0. Read/initialize the 3D grid and its size
@@ -269,7 +273,7 @@ public class Puzlock {
     }
 
     //1.4. Expand the key piece
-    static void expandKeyPiece(){
+    static ArrayList<Voxel> expandKeyPiece(){
         /* • Identify an additional anchor voxel for the direction immobilized by the blocking voxel picked in step 3 – it is furthest away from the blocking
         voxel in direction vn; if no such voxels exist, we use the blocking voxel as the anchor; 
         note that the anchor voxel idea is crucial for the expansion process as the existing blockage 
@@ -285,29 +289,20 @@ public class Puzlock {
         System.out.println("Debug printing the removable piece...");
         debugPrintVoxels(addedVoxels);
         ArrayList addedVoxels2 = addVoxels(addedVoxels);
-        System.out.println("Debug printing the new piece with added voxels (neighbouring and above)...");
+        System.out.println("Debug printing the new piece with added voxels (neighbouring and above) and voxels added by probability (as per subpoint 3's strategy)...");
         debugPrintVoxels(addedVoxels2);
-
-        /* • Sum the accessibility of each ui and the voxels above it, say sumi, and normalize pi = sumi^(-β) to be pi2 = pi/∑ipi, 
-        where β is a parameter ranged from 1 to 6. 
-        Hence, we can randomly pick a ui with p2i as the probability of choosing it, and expand the key piece. 
-        These substeps are repeated until the key contains roughly m voxels. */
-        //done by addVoxels3 method of this class...
-        ArrayList addedVoxels3 = addVoxels3(addedVoxels2);
-        System.out.println("Debug printing the new piece with voxels added by probability (as per subpoint 3's strategy)...");
-        debugPrintVoxels(addedVoxels3);
-        
+        return addedVoxels;
     }  
 
     //1.5. Confirm the key piece
-    static void confirmKeyPiece(){
+    static void confirmKeyPiece(ArrayList<Voxel> keyPiece){
         /* • After steps 1 to 4, the key is guaranteed to fulfill all interlocking requirements, except that R2 needs to be simply connected. 
         With the help of accessibilty, the chance of fragmenting R2 (and other remaining volumes) is rather low; 
         hence, testing the connectivity of voxels in R2 at the end of the key piece generation procedure is more efficient than doing it at multiple places. 
         To guarantee that R2 is simply connected, we gather all the voxels next to the key in a set, say Rs, and apply a simple flooding algorithm to test 
         whether all voxels in Rs can be visited or not in R2. */
         //done by floodFill method this class...
-        
+        floodFill(keyPiece);
     }
 
     //2. Extracting other puzzle pieces
@@ -832,13 +827,14 @@ public class Puzlock {
     }
     
     static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels){
+        //perhas we will need a set of neighbours?
         for (PuzzlePiece p: puzzlePieces) { //find piece p...
 //            System.out.println("Selected piece is: "); debugPrintVoxels(addedVoxels); System.out.println(". Current piece is: "); debugPrintVoxels(p.piece);
-            if (p.piece.equals(addedVoxels)){
+            if (p.piece.equals(addedVoxels)){ //once we have retrieved our selected piece from the set of puzzle pieces generated and made removable
                 Voxel anchor = p.anchorVoxel;
                 Voxel anchor2 = p.anchorVoxel2;
                 System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates()); 
-                while ((addedVoxels.size()<m)){ //break when we have reached the expected number of voxels
+//                while ((setOfCandidates.size()<m)){ //break when we have reached the expected number of voxels
                     for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
                         Voxel currentVoxel = addedVoxels.get(i);
                         if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors
@@ -849,66 +845,94 @@ public class Puzlock {
                             Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
                             Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
                             Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                            if ((!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained
-                                addedVoxels.add(leftNeighbour);
-                                addVoxels2(addedVoxels, leftNeighbour); //add the voxels above the added neighbour
-                                break; //assuming new voxels are added to the end of the list, breaking here should work
-//                                if (addedVoxels.size() >= m){ break; } //break if we have reached the expected number of voxels
-                            }if ((!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained
-                                addedVoxels.add(rightNeighbour);
-                                addVoxels2(addedVoxels, rightNeighbour); //add the voxels above the added neighbour
-                                break;
-                            }if ((!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained
-                                addedVoxels.add(upNeighbour);
-                                addVoxels2(addedVoxels, upNeighbour); //add the voxels above the added neighbour
-                                break;
-                            }if ((!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
-                                //if there is a down neighbour which is not already contained and if it does not have a y-coordinate greater that either anchor given the same x and z
-                                addedVoxels.add(downNeighbour);
-                                addVoxels2(addedVoxels, downNeighbour); //add the voxels above the added neighbour
-                                break;
-                            }if ((!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained
-                                addedVoxels.add(forwardNeighbour);
-                                addVoxels2(addedVoxels, forwardNeighbour); //add the voxels above the added neighbour
-                                break;
-                            }if ((!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained
-                                addedVoxels.add(backwardNeighbour);
-                                addVoxels2(addedVoxels, backwardNeighbour); //add the voxels above the added neighbour
-                                break;
+                            if ((!setOfCandidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
+                                setOfCandidates.add(leftNeighbour);
+//                                addedVoxels.add(leftNeighbour);
+//                                addVoxels2(addedVoxels); //add the voxels above the added neighbour
+//                                break; //assuming new voxels are added to the end of the list, breaking here should work
+                            }if ((!setOfCandidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
+                                setOfCandidates.add(rightNeighbour);
+                            }if ((!setOfCandidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
+                                setOfCandidates.add(upNeighbour);
+                            }if ((!setOfCandidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
+                                //if there is a down neighbour which is not already contained in addedVoxels nor in the set of candidates 
+                                //and if it does not have a y-coordinate greater that either anchor given the same x and z
+                                setOfCandidates.add(downNeighbour);
+                            }if ((!setOfCandidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                                setOfCandidates.add(forwardNeighbour);
+                            }if ((!setOfCandidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                                setOfCandidates.add(backwardNeighbour);
                             }
                         }
                     }
-                }
+//                }
             }
         }
+        ArrayList<Voxel> addedVs = addVoxels2(addedVoxels); //add the voxels above the added neighbour
+        return addedVs;
+    }
+   
+    /* an implementation of section 1.4 point 2 & 3: Expands the key piece by adding neighbouring voxels by probability value pi2. Returns new set of added nieghbours */
+    static ArrayList<Voxel> addVoxels2(ArrayList<Voxel> addedVoxels){
+        System.out.println("Debug printing the set of candidates...");
+        debugPrintVoxels(setOfCandidates);
+        //debug print the set of candidates
+        //compute the sum of accessibility values all voxels in addedVoxels with the same x and z but lower y values than upNeighbour i.e voxels above the added neighbour 
+        //for each voxel, check if it's upNeighbour is already contained in the addedVoxels piece...
+        ArrayList<ArrayList> setOfUpNeighbours = new ArrayList<>(); //each neighbouring candidate and the voxels above will be contained in the set of neighbours
+        double sumOfPis = 0;
+        for (Voxel v: setOfCandidates) { //this loop is used for calculating pi and the sumOfPis
+            Voxel upNeighbour = getUp(v.x, v.y, v.z);
+            ArrayList<Voxel> upNeighbours = new ArrayList<>(); //stores the list of voxels above the current voxel
+            upNeighbours.add(v); //add the current voxel to the set
+            while (upNeighbour!=null){ //for each neighbour above the current voxel
+                upNeighbours.add(upNeighbour); //add the upNeighbour to the set of upNeighbours
+                upNeighbour = getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z); //set upNeighbour to the voxel above the current upNeighbour
+            }
+            double sum = sumOfAccessVals(upNeighbours); //adds the sum of voxels above each voxel (ui)
+            double pi = Math.pow(sum, -B); //pi = sumi^(-β) i.e. the weighted sum
+            sumOfPis = sumOfPis+pi; //add this pi to the sim of all pis
+            setOfUpNeighbours.add(upNeighbours); //store the set of upNeighbours
+        }
+        //at this point we should have an array of neighbours above the current voxel; from this we should be able to calculate the pi2 of each voxel
+        double sumOfProbabilities = 0;
+        for (int i=0; i<setOfUpNeighbours.size(); i++) { //this loop is used for calculating pi2 gicen the sumOfPis
+            ArrayList<Voxel> upNeighbours = setOfUpNeighbours.get(i);
+            double sum = sumOfAccessVals(upNeighbours); //adds the sum of voxels above each voxel (ui)
+            double pi = Math.pow(sum, -B); //pi = sumi^(-β) i.e. the weighted sum
+            Voxel ui = upNeighbours.get(0); //each neighbour (ui) will be the first element in the set of upNieghbours
+            if (ui.getCoordinates().equals(setOfCandidates.get(i).getCoordinates())){
+                ui.pi2 = pi/(sumOfPis); //pi2 = pi/∑ipi, the probability of addeding a voxel piece
+                System.out.println((ui.pi2*100)+" is the probability of choosing voxel @ "+ui.getCoordinates());
+                sumOfProbabilities = sumOfProbabilities + ui.pi2;
+            }else{
+                System.out.println("ERROR! Ui is @ "+ui.getCoordinates()+". It is supposed to be @ "+setOfCandidates.get(i).getCoordinates());
+            }
+        }
+        //now we should be able to add voxels from the candidate set according to each ones probability. We must first ensure that the sum of probablities equals 1 (or 100)
+        System.out.println("The sum of probabilites is: "+sumOfProbabilities);
+        while (addedVoxels.size() < m){ //now we will keep adding neighbouring voxels by probability until we have enough
+            int max = (int)(sumOfProbabilities*100); //stores the maximum for the range 0 to sumOfProbilites (1) times 100. It should equal 100
+            double randomNum = ThreadLocalRandom.current().nextDouble(0, max); //pick a random number between 0 and the max (100)
+            double rum = (double)(randomNum/100);
+            int randomNum2 = (int)(rum*setOfCandidates.size()); ////make the random number represent an index in the set of candidates by dividing it by the size. Should range from 0 to setOfCandidates-1
+            System.out.println("Random number in the range of 0 - "+max+" is "+randomNum+" which represents index "+randomNum2);
+            Voxel chosenCandidate = setOfCandidates.get(randomNum2); //get the chosen candidate from the appropriate index
+            if (!addedVoxels.contains(chosenCandidate)){ //if the chosen candidate is not already in the array
+                addedVoxels.add(chosenCandidate); //add the chosen candidate to the key piece
+                System.out.print("Chosen candidate voxel is @ "+chosenCandidate.getCoordinates()+"! ");
+                System.out.print("Added "+chosenCandidate.getCoordinates()+" to the key piece");
+            }
+            System.out.println("");
+        }
         return addedVoxels;
-   }
+    }
    
-   /* an implementation of section 1.4 point 2: Adds voxels on top of current voxel. Returns new set of added voxels */
-   static ArrayList<Voxel> addVoxels2(ArrayList<Voxel> addedVoxels, Voxel currentVoxel){
-       Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-       if ((!addedVoxels.contains(upNeighbour)) && (addedVoxels.size()<m) && (upNeighbour!=null)){
-           addedVoxels.add(voxel);
-           return addVoxels2(addedVoxels, upNeighbour); //recurse from the neighbour above
-       }
-       return addedVoxels;
-   }
-   
-   /* an implementation of section 1.4 point 3: Adds voxels on top of current voxel by probability value pi2. Returns new set of added voxels */
-   static ArrayList<Voxel> addVoxels3(ArrayList<Voxel> addedVoxels){
-        double beta = 1; //stores β, which has a value ranging from 1 to 6
-        //for each removable puzzle piece...
-        double sum = sumOfAccessVals(addedVoxels); //sumOfAccessVals2, same as sumOfAccessVals but also adds the sum of voxels above each voxel (ui)
-        double pi = Math.pow(sum, -beta); //pi = sumi^(-β) i.e. the weighted sum
-        double pi2 = pi/(sum); //pi2 = pi/∑ipi, the normalization
-        return addedVoxels;
-   }
-   
-   /* Flooding algorithm which helps compleete section 1.5) Confirming the key piece */
-   static void floodFill(ArrayList<Voxel> keyPiece){
-       //1) gather all voxels next to the keyPiece in a set (Rs)...
-       ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
-       for (Voxel v: keyPiece){ //for each voxel, get its neighbours
+    /* Flooding algorithm which helps compleete section 1.5) Confirming the key piece */
+    static void floodFill(ArrayList<Voxel> keyPiece){
+        //1) gather all voxels next to the keyPiece in a set (Rs)...
+        ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
+        for (Voxel v: keyPiece){ //for each voxel, get its neighbours
             Voxel leftNeighbour = getLeft(v.x, v.y, v.z); 
             Voxel rightNeighbour = getRight(v.x, v.y, v.z); 
             Voxel upNeighbour = getUp(v.x, v.y, v.z);
@@ -916,39 +940,93 @@ public class Puzlock {
             Voxel forwardNeighbour = getForward(v.x, v.y, v.z);
             Voxel backwardNeighbour = getBackward(v.x, v.y, v.z);
             if (leftNeighbour != null){ //if there is a left neighbour
-                if(!keyPiece.contains(leftNeighbour)){ //if neighbour is not already in keyPiece
+                if((!keyPiece.contains(leftNeighbour)) && (!setOfNeighbours.contains(leftNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
                 }
             }if (rightNeighbour != null){ //if there is a right neighbour
-                if(!keyPiece.contains(rightNeighbour)){ //if neighbour is not already in keyPiece
+                if((!keyPiece.contains(rightNeighbour)) && (!setOfNeighbours.contains(rightNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
                 }
             }if (upNeighbour != null){ //if there is an up neighbour
-                if(!keyPiece.contains(upNeighbour)){ //if neighbour is not already in keyPiece
+                if((!keyPiece.contains(upNeighbour)) && (!setOfNeighbours.contains(upNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
                 }
             }if (downNeighbour != null){ //if there is a down neighbour
-                if(!keyPiece.contains(downNeighbour)){ //if neighbour is not already in keyPiece
+                if((!keyPiece.contains(downNeighbour)) && (!setOfNeighbours.contains(downNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
                 }
             }if (forwardNeighbour != null){ //if there is a forward neighbour
-                if(!keyPiece.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece
+                if((!keyPiece.contains(forwardNeighbour)) && (!setOfNeighbours.contains(forwardNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
                 }
             }if (backwardNeighbour != null){ //if there is a backward neighbour
-                if(!keyPiece.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece
+                if((!keyPiece.contains(backwardNeighbour)) && (!setOfNeighbours.contains(backwardNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
                 }
             }
-       }
-       System.out.println("Debug printing the set of neighbours (Rs)...");
-       debugPrintVoxels(setOfNeighbours);
-       //2) apply flooding algorithm to test whether all voxels in Rs can be visited. If so, the key piece is confirmed. If not, reject the key piece...
-       ArrayList<Voxel> visitedVoxels = new ArrayList<>(); //stores the set of visited voxels
-       ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //stores the set of unvisited voxels, initialized to the set of neighbours
-       unvisitedVoxels = (ArrayList)setOfNeighbours.clone(); //copy the set of neighbours to avoid concurrency issues
-       while (!unvisitedVoxels.isEmpty()){ //do until the set of unvisited voxels is empty. We will go from the first voxel and try to visit every neighbour until the set is empty
-           //I AM HERE!!!
-       }
-   }
+        }
+        System.out.println("Debug printing the set of neighbours (Rs)...");
+        debugPrintVoxels(setOfNeighbours);
+        //2) apply flooding algorithm to test whether all voxels in Rs can be visited. If so, the key piece is confirmed. If not, reject the key piece...
+        ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //stores the set of unvisited voxels, initialized to the set of neighbours
+        unvisitedVoxels = (ArrayList)setOfNeighbours.clone(); //copy the set of neighbours to avoid concurrency issues
+        Voxel firstVoxel = unvisitedVoxels.get(0); //get the first voxel, this will be used to visit every other neighbour
+        floodFill2(unvisitedVoxels, firstVoxel); //implements the visiting of every neighbouring voxel and removal from the set of unvisited neighbours
+        if (unvisitedVoxels.isEmpty()){ //if the set of unvisited voxels is empty at the end, the key piece is confirmed
+            System.out.println("THE KEY PIECE IS CONFIRMED!");
+        }else{ //if there are still some unvisited voxels at the end, reject the key piece
+            System.out.println("ERROR! THE KEY PIECE IS CANNOT BE CONFIRMED. Below are the voxels which remain unvisted...");
+            for (Voxel v: unvisitedVoxels) {
+                System.out.println(v.getCoordinates()+"; ");
+            }
+        }
+    }
+   
+    /* Actual implementation of the flooding algorithm used for confirming the key piece */
+    static void floodFill2(ArrayList<Voxel> unvisitedVoxels, Voxel firstVoxel){
+        ArrayList<Voxel> visitedVoxels = new ArrayList<>();
+        if (!unvisitedVoxels.isEmpty()){ //until the set of unvisited voxels is empty. We will go from the first voxel and try to visit every neighbour until the set is empty
+            Voxel leftNeighbour = getLeft(firstVoxel.x, firstVoxel.y, firstVoxel.z); 
+            Voxel rightNeighbour = getRight(firstVoxel.x, firstVoxel.y, firstVoxel.z); 
+            Voxel upNeighbour = getUp(firstVoxel.x, firstVoxel.y, firstVoxel.z);
+            Voxel downNeighbour = getDown(firstVoxel.x, firstVoxel.y, firstVoxel.z);
+            Voxel forwardNeighbour = getForward(firstVoxel.x, firstVoxel.y, firstVoxel.z);
+            Voxel backwardNeighbour = getBackward(firstVoxel.x, firstVoxel.y, firstVoxel.z);
+            if (leftNeighbour != null){ //if there is a left neighbour
+                if(unvisitedVoxels.contains(leftNeighbour) && (!visitedVoxels.contains(leftNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
+                    visitedVoxels.add(leftNeighbour); //add it to the set of visited voxels
+                    unvisitedVoxels.remove(leftNeighbour); //remove it from the set of unvisited voxels
+                }
+            }if (rightNeighbour != null){ //if there is a right neighbour
+                if(unvisitedVoxels.contains(rightNeighbour) && (!visitedVoxels.contains(rightNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
+                    visitedVoxels.add(rightNeighbour); //add it to the set of visited voxels
+                    unvisitedVoxels.remove(rightNeighbour); //remove it from the set of unvisited voxels
+                }
+            }if (upNeighbour != null){ //if there is an up neighbour
+                if(unvisitedVoxels.contains(upNeighbour) && (!visitedVoxels.contains(upNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
+                    visitedVoxels.add(upNeighbour); //add it to the set of visited voxels
+                    unvisitedVoxels.remove(upNeighbour); //remove it from the set of unvisited voxels
+                }
+            }if (downNeighbour != null){ //if there is a down neighbour
+                if(unvisitedVoxels.contains(downNeighbour) && (!visitedVoxels.contains(downNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
+                    visitedVoxels.add(downNeighbour); //add it to the set of visited voxels
+                    unvisitedVoxels.remove(downNeighbour); //remove it from the set of unvisited voxels
+                }
+            }if (forwardNeighbour != null){ //if there is a forward neighbour
+                if(unvisitedVoxels.contains(forwardNeighbour) && (!visitedVoxels.contains(forwardNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
+                    visitedVoxels.add(forwardNeighbour); //add it to the set of visited voxels
+                    unvisitedVoxels.remove(forwardNeighbour); //remove it from the set of unvisited voxels
+                }
+            }if (backwardNeighbour != null){ //if there is a backward neighbour
+                if(unvisitedVoxels.contains(backwardNeighbour) && (!visitedVoxels.contains(backwardNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
+                    visitedVoxels.add(backwardNeighbour); //add it to the set of visited voxels
+                    unvisitedVoxels.remove(backwardNeighbour); //remove it from the set of unvisited voxels
+                }
+            }
+            for (Voxel v: visitedVoxels){
+                floodFill2(unvisitedVoxels, v); //recurse from the neighbouring voxels
+            }
+        }
+    }
+    
 }
