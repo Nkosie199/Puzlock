@@ -833,39 +833,34 @@ public class Puzlock {
             if (p.piece.equals(addedVoxels)){ //once we have retrieved our selected piece from the set of puzzle pieces generated and made removable
                 Voxel anchor = p.anchorVoxel;
                 Voxel anchor2 = p.anchorVoxel2;
-                System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates()); 
-//                while ((setOfCandidates.size()<m)){ //break when we have reached the expected number of voxels
-                    for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
-                        Voxel currentVoxel = addedVoxels.get(i);
-                        if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors
-                            //add neighbouring voxels (excluding the anchors or beneath them) until addedVoxels.size() > m...
-                            Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-                            Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-                            Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                            Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                            Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                            Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                            if ((!setOfCandidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
-                                setOfCandidates.add(leftNeighbour);
-//                                addedVoxels.add(leftNeighbour);
-//                                addVoxels2(addedVoxels); //add the voxels above the added neighbour
-//                                break; //assuming new voxels are added to the end of the list, breaking here should work
-                            }if ((!setOfCandidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
-                                setOfCandidates.add(rightNeighbour);
-                            }if ((!setOfCandidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
-                                setOfCandidates.add(upNeighbour);
-                            }if ((!setOfCandidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
-                                //if there is a down neighbour which is not already contained in addedVoxels nor in the set of candidates 
-                                //and if it does not have a y-coordinate greater that either anchor given the same x and z
-                                setOfCandidates.add(downNeighbour);
-                            }if ((!setOfCandidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
-                                setOfCandidates.add(forwardNeighbour);
-                            }if ((!setOfCandidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
-                                setOfCandidates.add(backwardNeighbour);
-                            }
+                System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates());
+                for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
+                    Voxel currentVoxel = addedVoxels.get(i);
+                    if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors
+                        //add neighbouring voxels (excluding the anchors or beneath them) until addedVoxels.size() > m...
+                        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+                        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
+                        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                        if ((!setOfCandidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            setOfCandidates.add(leftNeighbour);
+                        }if ((!setOfCandidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            setOfCandidates.add(rightNeighbour);
+                        }if ((!setOfCandidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            setOfCandidates.add(upNeighbour);
+                        }if ((!setOfCandidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
+                            //if there is a down neighbour which is not already contained in addedVoxels nor in the set of candidates 
+                            //and if it does not have a y-coordinate greater that either anchor given the same x and z
+                            setOfCandidates.add(downNeighbour);
+                        }if ((!setOfCandidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            setOfCandidates.add(forwardNeighbour);
+                        }if ((!setOfCandidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            setOfCandidates.add(backwardNeighbour);
                         }
                     }
-//                }
+                }
             }
         }
         ArrayList<Voxel> addedVs = addVoxels2(addedVoxels); //add the voxels above the added neighbour
@@ -911,7 +906,8 @@ public class Puzlock {
         }
         //now we should be able to add voxels from the candidate set according to each ones probability. We must first ensure that the sum of probablities equals 1 (or 100)
         System.out.println("The sum of probabilites is: "+sumOfProbabilities);
-        while (addedVoxels.size() < m){ //now we will keep adding neighbouring voxels by probability until we have enough
+        int iterator = 0; //an iterator to ensure the loop below breaks
+        while (addedVoxels.size() < m && (iterator < 50)){ //now we will keep adding neighbouring voxels by probability until we have enough
             int max = (int)(sumOfProbabilities*100); //stores the maximum for the range 0 to sumOfProbilites (1) times 100. It should equal 100
             double randomNum = ThreadLocalRandom.current().nextDouble(0, max); //pick a random number between 0 and the max (100)
             double rum = (double)(randomNum/100);
@@ -924,6 +920,7 @@ public class Puzlock {
                 System.out.print("Added "+chosenCandidate.getCoordinates()+" to the key piece");
             }
             System.out.println("");
+            iterator++;
         }
         return addedVoxels;
     }
