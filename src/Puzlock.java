@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
@@ -35,12 +36,16 @@ public class Puzlock {
     static ArrayList<PuzzlePiece> puzzlePieces = new ArrayList<>(); //stores the set of puzzle pieces
     static ArrayList<Voxel> keyPiece = new ArrayList();
     static ArrayList<Voxel> setOfCandidates = new ArrayList<>(); //stores the set of candidate voxels to be added to keyPiece (addedVoxels)
+    static IO io = new IO();
+    static int top = -1; //stores the y-coordinate of the highest voxel i.e. the top
     
-    public static void main(String[] args){ 
+    public static void main(String[] args) throws IOException{ 
         //0.1. Read the 3D grid
-        inputVoxelizedMesh = readVoxelizedMesh();
+//        inputVoxelizedMesh = readVoxelizedMesh();
+        inputVoxelizedMesh = io.readFileToInputGrid("4x4x4");
+        inputVoxelizedMeshSize = inputVoxelizedMesh.length;
         //0.2. Initialize the 1D array representing the 3D grid/array
-        initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array
+        initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array and sets the value of top
 //        debugPrintVoxelizedMesh(inputVoxelizedMesh);
 //        debugPrintVoxels(voxels);
         sc = new Scanner(System.in);
@@ -67,6 +72,11 @@ public class Puzlock {
         //1.5. Confirm the key piece
         System.out.println("1.5. Confirm the key piece...");
         confirmKeyPiece(keyPiece);
+        //n. Print keyPiece(s)
+        setOutputPieces(keyPiece); //will set outputVoxelizedMesh
+        System.out.println("Debug printing output mesh and printing to file...");
+        debugPrintVoxelizedMesh(outputVoxelizedMesh);
+        io.printGridToFile(outputVoxelizedMesh); //should print the key piece to a file called outputGrid
         //2. Extracting other puzzle pieces...
         //2.1. Candidate seed voxels
         //2.2. Create an initial Pi+1
@@ -91,8 +101,7 @@ public class Puzlock {
             {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
             {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
             {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
-        }; 
-        inputVoxelizedMeshSize = voxelizedMesh.length;
+        };
         return voxelizedMesh;
     }
 
@@ -104,8 +113,7 @@ public class Puzlock {
         //Require that these voxels can move out of the puzzle in one movement.
         int i=0;
         for (Voxel v: voxels){
-            if (v.y == 0){
-                //i.e. if voxel is at the top
+            if (v.y == top){ //i.e. if voxel is at the top
                 if (getLeft(v.x,v.y,v.z) == null){
                     //and if the 3D array has 0 or null at the left co-ordinate of that voxel...
                     exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
@@ -137,6 +145,7 @@ public class Puzlock {
             }
         }
         //• From the candidate set, we can either randomly pick a seed, or let the user make a choice.
+        System.out.println("Bound: "+exteriorVoxels.size());
         int randomNum = ThreadLocalRandom.current().nextInt(0, exteriorVoxels.size());
         seedVoxel = exteriorVoxels.get(randomNum);
         System.out.println("Seed voxel was chosen among exterior voxels at index "+randomNum+"\n");
@@ -366,6 +375,9 @@ public class Puzlock {
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
                     if (vMesh[z][y][x] == 1){//only if index == 1
+                        if ((y < top) || (top==-1)){ //if the is a lesser y-coordinate or if it has not yet been set, update top
+                            top = y;
+                        }
                         Voxel v = new Voxel(x,y,z);
                         voxels.add(v);
                         voxels2.add(v);
@@ -435,19 +447,22 @@ public class Puzlock {
     
     /* Takes in a puzzle piece(as an array) to print and sets it to outputVoxelizedMesh */
     static void setOutputPieces(ArrayList<Voxel> piece){
-        int size = inputVoxelizedMesh.length;
+        int size = inputVoxelizedMeshSize;
         outputVoxelizedMesh = new int[size][size][size];
         for (int i = 0; i < piece.size(); i++) { //for each voxel in the piece...
-            Voxel voxel = piece.get(i); //stores the current piece
+            Voxel voxel = piece.get(i); //stores the current voxel
             int xcoord = voxel.x; //stores the current x co-ordinate
             int ycoord = voxel.y; //stores the current y co-ordinate
             int zcoord = voxel.z; //stores the current z co-ordinate
             for (int z = 0; z < inputVoxelizedMeshSize; z++) { //for each voxel...
                 for (int y = 0; y < inputVoxelizedMeshSize; y++) {
                     for (int x = 0; x < inputVoxelizedMeshSize; x++) {
-                        if ((x==xcoord) && (y==ycoord) && (z==zcoord)){ //if co=ordinates match
+                        if (outputVoxelizedMesh[z][y][x]==1){ //if index has already been set to 1
+                            //do nothing
+                        }
+                        else if ((x==xcoord) && (y==ycoord) && (z==zcoord)){ //if index is 0 or null and the co-ordinates match
                             outputVoxelizedMesh[z][y][x] = 1; //set index to 1
-                        }else if (outputVoxelizedMesh[z][y][x]!=1){ //only if index has not already been set to 1
+                        }else{ //if index is 0 or null and the co-ordinates DO NOT match
                             outputVoxelizedMesh[z][y][x] = 0; //set index to 0
                         }
                     }
