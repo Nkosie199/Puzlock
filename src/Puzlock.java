@@ -1,4 +1,6 @@
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
@@ -39,11 +41,13 @@ public class Puzlock {
     static IO io = new IO();
     static int top = -1; //stores the y-coordinate of the highest voxel i.e. the top
     
-    public static void main(String[] args) throws IOException{ 
+    public static void main(String[] args) throws IOException{
+        //0. Setup...
         //0.1. Read the 3D grid
 //        inputVoxelizedMesh = readVoxelizedMesh();
+//        inputVoxelizedMesh = io.readFileToInputGrid("inputGrid");
         inputVoxelizedMesh = io.readFileToInputGrid("4x4x4");
-        inputVoxelizedMeshSize = inputVoxelizedMesh.length;
+        inputVoxelizedMeshSize = inputVoxelizedMesh[0].length;
         //0.2. Initialize the 1D array representing the 3D grid/array
         initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array and sets the value of top
 //        debugPrintVoxelizedMesh(inputVoxelizedMesh);
@@ -74,9 +78,9 @@ public class Puzlock {
         confirmKeyPiece(keyPiece);
         //n. Print keyPiece(s)
         setOutputPieces(keyPiece); //will set outputVoxelizedMesh
-        System.out.println("Debug printing output mesh and printing to file...");
+        System.out.println("\nDebug printing output mesh and printing to file...");
         debugPrintVoxelizedMesh(outputVoxelizedMesh);
-        io.printGridToFile(outputVoxelizedMesh); //should print the key piece to a file called outputGrid
+        io.printGridToFile(outputVoxelizedMesh, "keyPiece"); //should print the key piece to a file called keyPiece
         //2. Extracting other puzzle pieces...
         //2.1. Candidate seed voxels
         //2.2. Create an initial Pi+1
@@ -112,6 +116,7 @@ public class Puzlock {
         //• Identify a set of exterior voxels that have exactly a pair of adjacent exterior faces (with one being on top). 
         //Require that these voxels can move out of the puzzle in one movement.
         int i=0;
+        System.out.println("Top: "+top+". Size: "+inputVoxelizedMeshSize);
         for (Voxel v: voxels){
             if (v.y == top){ //i.e. if voxel is at the top
                 if (getLeft(v.x,v.y,v.z) == null){
@@ -170,7 +175,7 @@ public class Puzlock {
                         //get the voxel at that index and set its accessibility value...
                         int index = indexOfCoordinate(x,y,z);
                         Voxel v = voxels.get(index);
-                        int neighbours = countNeighbours(x,y,z);
+                        int neighbours = countNeighbours(v);
                         v.accessibilityValue = neighbours;
                         System.out.println(p+") Voxel "+v+" at index "+x+","+y+","+z+" has "+neighbours+" neighbours");
                         p++;
@@ -181,7 +186,7 @@ public class Puzlock {
         System.out.println("");
         // subsequent passes - implicitly include neighbours from further afield
         int passes = 3; //# of passes (j from the eqn in the paper) i.e. = 3
-        int q = 1;
+        int q = 1; //stores the current index
         for (int pass = 1; pass < passes; pass++) {
             for (int z=0; z<inputVoxelizedMesh.length; z++){
                 for (int y=0; y<inputVoxelizedMesh.length; y++){
@@ -225,7 +230,7 @@ public class Puzlock {
             accVals.add(v.accessibilityValue); //add its accessibility value
         }
         Collections.sort(accVals); //sorts the stores accessibility values
-        maxAccVal = accVals.get(Nb2-1);
+        maxAccVal = accVals.get(Nb2-1); //gets the last of the sorted array
         //for each voxelpair
         for (VoxelPair q: voxelPairs) {
             Double d = q.getVoxel2().accessibilityValue; //get the voxelpair's blockee's accessibility value
@@ -304,7 +309,7 @@ public class Puzlock {
     }  
 
     //1.5. Confirm the key piece
-    static void confirmKeyPiece(ArrayList<Voxel> keyPiece){
+    static void confirmKeyPiece(ArrayList<Voxel> keyPiece) throws FileNotFoundException, UnsupportedEncodingException{
         /* • After steps 1 to 4, the key is guaranteed to fulfill all interlocking requirements, except that R2 needs to be simply connected. 
         With the help of accessibilty, the chance of fragmenting R2 (and other remaining volumes) is rather low; 
         hence, testing the connectivity of voxels in R2 at the end of the key piece generation procedure is more efficient than doing it at multiple places. 
@@ -430,9 +435,11 @@ public class Puzlock {
     /* takes in a set of co-ordinates and returns the index of it on the arraylist */
     static synchronized int indexOfCoordinate(int x, int y, int z){
         int index = 0;
+        int size = inputVoxelizedMeshSize; //this size is the number of xs i.e. voxels (ones on the in the inputGrid's x-axis)
+        int size2 = size*size; //this size is the number of xs times the number of ys; indicates where z would start given 0..n
         index = index + (x*1);
-        index = index + (y*4);
-        index = index + (z*16);
+        index = index + (y*size);
+        index = index + (z*size2);
         return index;
     }
     
@@ -447,6 +454,7 @@ public class Puzlock {
     
     /* Takes in a puzzle piece(as an array) to print and sets it to outputVoxelizedMesh */
     static void setOutputPieces(ArrayList<Voxel> piece){
+        //remember: current program only works with grids of 32x32x32
         int size = inputVoxelizedMeshSize;
         outputVoxelizedMesh = new int[size][size][size];
         for (int i = 0; i < piece.size(); i++) { //for each voxel in the piece...
@@ -580,21 +588,34 @@ public class Puzlock {
     }
     
     /* Takes in a voxel's co-ordinates and counts its neighbours */
-    static int countNeighbours(int x, int y, int z){
+    static int countNeighbours(Voxel v){
         //neighbour can either be 0, 1 or null...
         int neighbours = 0;
-        try{if (inputVoxelizedMesh[x-1][y][z] == 1){neighbours++;} //check left
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x+1][y][z] == 1){neighbours++;} //check right
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y-1][z] == 1){neighbours++;} //check up
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y+1][z] == 1){neighbours++;} //check down
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y][z+1] == 1){neighbours++;} //check forward
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y][z-1] == 1){neighbours++;} //check backward}
-        }catch(Exception e){}
+        if (getLeft(v.x, v.y, v.z) != null){ //check left
+            neighbours++;
+        }if (getRight(v.x, v.y, v.z) != null){ //check right
+            neighbours++;
+        }if (getUp(v.x, v.y, v.z) != null){ //check up
+            neighbours++;
+        }if (getDown(v.x, v.y, v.z) != null){ //check down
+            neighbours++;
+        }if (getForward(v.x, v.y, v.z) != null){ //check forward
+            neighbours++;
+        }if (getBackward(v.x, v.y, v.z) != null){ //check backward
+            neighbours++;
+        }
+//        try{if (inputVoxelizedMesh[x-1][y][z] == 1){neighbours++;} //check left
+//        }catch(Exception e){}
+//        try{if (inputVoxelizedMesh[x+1][y][z] == 1){neighbours++;} //check right
+//        }catch(Exception e){}
+//        try{if (inputVoxelizedMesh[x][y-1][z] == 1){neighbours++;} //check up
+//        }catch(Exception e){}
+//        try{if (inputVoxelizedMesh[x][y+1][z] == 1){neighbours++;} //check down
+//        }catch(Exception e){}
+//        try{if (inputVoxelizedMesh[x][y][z+1] == 1){neighbours++;} //check forward
+//        }catch(Exception e){}
+//        try{if (inputVoxelizedMesh[x][y][z-1] == 1){neighbours++;} //check backward}
+//        }catch(Exception e){}
         return neighbours;
     }
     
@@ -941,7 +962,7 @@ public class Puzlock {
     }
    
     /* Flooding algorithm which helps compleete section 1.5) Confirming the key piece */
-    static void floodFill(ArrayList<Voxel> keyPiece){
+    static void floodFill(ArrayList<Voxel> keyPiece) throws FileNotFoundException, UnsupportedEncodingException{
         //1) gather all voxels next to the keyPiece in a set (Rs)...
         ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
         for (Voxel v: keyPiece){ //for each voxel, get its neighbours
@@ -979,6 +1000,32 @@ public class Puzlock {
         }
         System.out.println("Debug printing the set of neighbours (Rs)...");
         debugPrintVoxels(setOfNeighbours);
+        int[][][] neighbours = new int[32][32][32]; //stores the set of neighbours in a 3D array
+        for (int h = 0; h < setOfNeighbours.size(); h++) { //for each neighbour voxel
+            Voxel v = setOfNeighbours.get(h); //get the current voxel
+            for (int i = 0; i < 32; i++) { //iterates though zs
+                for (int j = 0; j < 32; j++) { //iterates though ys
+                    for (int k = 0; k < 32; k++) { //iterates though xs
+                        neighbours[i][j][k] = 0; //fill it up with 0s
+                    }
+                }
+            }
+        }
+        for (int h = 0; h < setOfNeighbours.size(); h++) { //for each neighbour voxel
+            Voxel v = setOfNeighbours.get(h); //get the current voxel
+            for (int i = 0; i < 32; i++) { //iterates though zs
+                for (int j = 0; j < 32; j++) { //iterates though ys
+                    for (int k = 0; k < 32; k++) { //iterates though xs
+                        if ((v.x==k) && (v.y==j) && (v.z==i) && (neighbours[i][j][k]!=1)){ //if the coordinates match and index value has not already been set to 1
+                            neighbours[i][j][k] = 1; //set the index value of neighbours to 1
+                        }
+                    }
+                }
+            }
+        }
+//        debugPrintVoxelizedMesh(neighbours);
+        //now we should also be able to print the set of neighbours to a file
+        io.printGridToFile(neighbours, "setOfNeighbours"); //should print the key piece to a file called keyPiece
         //2) apply flooding algorithm to test whether all voxels in Rs can be visited. If so, the key piece is confirmed. If not, reject the key piece...
         ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //stores the set of unvisited voxels, initialized to the set of neighbours
         unvisitedVoxels = (ArrayList)setOfNeighbours.clone(); //copy the set of neighbours to avoid concurrency issues

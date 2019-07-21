@@ -38,13 +38,13 @@ public class IO {
         while (line!=null){ //Each line represents 1 z
         	String[] yy = line.split(","); //store the ys by splitting
         	yVals = new ArrayList<>(); 
-        	for	(int i=0; i<yy.length; i++) { //for all y indices
-        		String[] xx = yy[i].split("");
-        		xVals = new ArrayList<>(); 
-        		for (int j=0; j<xx.length; j++) { //for all x indices
-        			xVals.add(Integer.parseInt(xx[j])); //sets the value of the input array
-        		}
-        		yVals.add(xVals); //store all xs in yVals
+        	for (int i=0; i<yy.length; i++) { //for all y indices
+                    String[] xx = yy[i].split("");
+                    xVals = new ArrayList<>(); 
+                    for (int j=0; j<xx.length; j++) { //for all x indices
+                        xVals.add(Integer.parseInt(xx[j])); //sets the value of the input array
+                    }
+                    yVals.add(xVals); //store all xs in yVals
         	}
         	zVals.add(yVals); //store all ys in zVals
         	//System.out.println(line);
@@ -75,21 +75,27 @@ public class IO {
     }
     
     /* takes in a 3D array and prints it to file in the appropriate format */
-    static void printGridToFile(int[][][] grid) throws FileNotFoundException, UnsupportedEncodingException{
+    static void printGridToFile(int[][][] grid, String filename) throws FileNotFoundException, UnsupportedEncodingException{
 //        System.out.println("Please enter the name of the output file:");
 //        String outfile = sc.nextLine();
 //        PrintWriter writer = new PrintWriter(outfile, "UTF-8");
-        PrintWriter writer = new PrintWriter("outputGrid", "UTF-8");
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid.length; j++) {
-                for (int k = 0; k < grid.length; k++) {
-                    writer.print(grid[i][j][k]); //prints xs
+        //output grid must always be 32x32x32...
+        PrintWriter writer = new PrintWriter(filename, "UTF-8");
+        for (int i = 0; i < 32; i++) {
+            for (int j = 0; j < 32; j++) {
+                for (int k = 0; k < 32; k++) {
+                    try{
+                        writer.print(grid[i][j][k]); //prints xs
+                    }catch (Exception e){ //outofbounds exception means we should pad with 0s
+                        writer.print("0"); //prints 0s
+                    }
+                    
                 }
-                if (j+1 != grid.length){ //if not the last y in a set of ys, print the comma
+                if (j+1 != 32){ //if not the last y in a set of ys, print the comma
                     writer.print(","); //prints comma to separate each y of xs
                 }
             }
-            if (i+1 != grid.length){ //if not the last z in a set of zs, print the newline
+            if (i+1 != 32){ //if not the last z in a set of zs, print the newline
                 writer.println(); //print newline to separate each z of ys
             }
         }

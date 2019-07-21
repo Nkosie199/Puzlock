@@ -13,8 +13,8 @@ public class PuzzlePiece {
     
     public PuzzlePiece(ArrayList<Voxel> piece, Voxel anchor1, Voxel anchor2, Voxel blocking, Voxel blockee){
         this.piece = piece;
-        anchorVoxel = anchor1;
-        anchorVoxel2 = anchor2;
+        this.anchorVoxel = anchor1;
+        this.anchorVoxel2 = anchor2;
         this.blocking = blocking;
         this.blockee = blockee;
     }
