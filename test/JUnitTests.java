@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author adam2
  */
 public class JUnitTests {
+	TestExamples examples = new TestExamples();
     Puzlock puzlock = new Puzlock();
     IO io = new IO();
     
@@ -32,13 +33,22 @@ public class JUnitTests {
     public void tearDown() {
     }
     
+    @Test
+    public void add() {
+        int int1 = 5;
+        int int2 = 4;
+        int actualResult = examples.add(5, 4);
+        int expectedResult = int1+int2;
+        assertEquals(expectedResult, actualResult);
+    }
+    
     /* unit testing for every Puzlock method which generates results comparable with expectations... 
     List of Puzlock methods which require unit testing:
         get<Directions> (for each direction)
         countNeighbours
         setAccessibilityValues
         indexOfCoordinate
-    */
+    
     @Test
     public void getDirections() {
         System.out.println("getting directions...");
@@ -48,4 +58,5 @@ public class JUnitTests {
     public void from1Dto3D() {
         System.out.println("from 1d to 3d...");
     }
+    */
 }

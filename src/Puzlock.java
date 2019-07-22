@@ -44,7 +44,6 @@ public class Puzlock {
     public static void main(String[] args) throws IOException{
         //0. Setup...
         //0.1. Read the 3D grid
-//        inputVoxelizedMesh = readVoxelizedMesh();
 //        inputVoxelizedMesh = io.readFileToInputGrid("inputGrid");
         inputVoxelizedMesh = io.readFileToInputGrid("4x4x4");
         inputVoxelizedMeshSize = inputVoxelizedMesh[0].length;
@@ -98,16 +97,6 @@ public class Puzlock {
     }
 
     //0. Read/initialize the 3D grid and its size
-    static int[][][] readVoxelizedMesh(){
-        //ideally we would use an input mesh, but we will generate a cube in this example...
-        int [][][] voxelizedMesh = {
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
-        };
-        return voxelizedMesh;
-    }
 
     //1. Extacting the key piece
     //1.1. Pick a seed voxel
@@ -863,7 +852,7 @@ public class Puzlock {
     }
     
     static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels){
-        //perhas we will need a set of neighbours?
+        //perhaps we will need a set of neighbours?
         for (PuzzlePiece p: puzzlePieces) { //find piece p...
 //            System.out.println("Selected piece is: "); debugPrintVoxels(addedVoxels); System.out.println(". Current piece is: "); debugPrintVoxels(p.piece);
             if (p.piece.equals(addedVoxels)){ //once we have retrieved our selected piece from the set of puzzle pieces generated and made removable
