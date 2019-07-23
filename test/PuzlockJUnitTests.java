@@ -13,22 +13,6 @@ public class PuzlockJUnitTests {
     TestExamples examples = new TestExamples();
     Puzlock puzlock = new Puzlock();
     
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
-    @BeforeEach
-    public void setUp() throws Exception {
-    }
-    
-    @AfterEach
-    public void tearDown() {
-    }
-    
     @Test
     public void add() {
         int input1 = 5;
@@ -61,16 +45,29 @@ public class PuzlockJUnitTests {
     }
     
     @Test
-    public void expandKeyPiece(ArrayList piece) {
+    public void expandKeyPiece() {
         //ArrayList<Voxel> expandKeyPiece(ArrayList piece)
-        ArrayList<Voxel> input1 = new ArrayList<>(); //yet to implement
+        int[][][] outputPiece = {
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
+        }; //the inputPiece made removable by adding voxels on top of each voxel
+        ArrayList<Voxel> expectedResult = new ArrayList<>();
+        expectedResult = puzlock.initializeVoxelArray(outputPiece);
+        //now lets setup the input piece to get the actual result...
+        int[][][] inputPiece = {
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
+        }; //remember to set this piece correctly
+        ArrayList<Voxel> input1 = new ArrayList<>();
+        input1 = puzlock.initializeVoxelArray(inputPiece);
         ArrayList<Voxel> actualResult = puzlock.expandKeyPiece(input1);
-        //eg. of manually settign an ArrayList...
-        //ArrayList<Integer> possibleValues2 = new ArrayList<Integer>(Arrays.asList(1,2,3,4,5,6,7,8,9));
-        ArrayList<Voxel> expectedResult = new ArrayList<>(); //yet to implement
         assertEquals(expectedResult, actualResult);
     }
-    
+    /*
     @Test
     public void indexOfCoordinate() {
         //int indexOfCoordinate(int x, int y, int z, int sizeOfAxes)
@@ -240,4 +237,5 @@ public class PuzlockJUnitTests {
         int actualResult = examples.add(5, 4);
         assertEquals(expectedResult, actualResult);
     }
+    */
 }
