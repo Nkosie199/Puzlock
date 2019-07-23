@@ -71,7 +71,7 @@ public class Puzlock {
         ensureBlockingMobility();
         //1.4. Expand the key piece
         System.out.println("1.4. Expand the key piece...");
-        keyPiece = expandKeyPiece();
+        keyPiece = expandKeyPiece(selectedPiece);
         //1.5. Confirm the key piece
         System.out.println("1.5. Confirm the key piece...");
         confirmKeyPiece(keyPiece);
@@ -95,8 +95,6 @@ public class Puzlock {
         debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
         System.out.println("-------------------------------------------------------------------------------------------");
     }
-
-    //0. Read/initialize the 3D grid and its size
 
     //1. Extacting the key piece
     //1.1. Pick a seed voxel
@@ -162,7 +160,7 @@ public class Puzlock {
                 for (int x=0; x<inputVoxelizedMesh.length; x++){
                     if (inputVoxelizedMesh[z][y][x] == 1){
                         //get the voxel at that index and set its accessibility value...
-                        int index = indexOfCoordinate(x,y,z);
+                        int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
                         Voxel v = voxels.get(index);
                         int neighbours = countNeighbours(v);
                         v.accessibilityValue = neighbours;
@@ -182,7 +180,7 @@ public class Puzlock {
                     for (int x=0; x<inputVoxelizedMesh.length; x++){
                         //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
                         double newAccessValue; //stores the new accessibility value as per the subsequent passes
-                        int index = indexOfCoordinate(x,y,z);
+                        int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
                         double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
                         double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
                         double sum = sumOfNeighboursAccValues(x,y,z); //stores the sum of accessibilty values of the voxel's neighbours
@@ -276,7 +274,7 @@ public class Puzlock {
     }
 
     //1.4. Expand the key piece
-    static ArrayList<Voxel> expandKeyPiece(){
+    static ArrayList<Voxel> expandKeyPiece(ArrayList<Voxel> piece){
         /* • Identify an additional anchor voxel for the direction immobilized by the blocking voxel picked in step 3 – it is furthest away from the blocking
         voxel in direction vn; if no such voxels exist, we use the blocking voxel as the anchor; 
         note that the anchor voxel idea is crucial for the expansion process as the existing blockage 
@@ -288,7 +286,7 @@ public class Puzlock {
         Furthermore, if the number of voxels exceeds the number of extra voxels the key needs, we remove ui, from the candidate set. */
         //done by addVoxels and addVoxels2 methods of this class...
         ArrayList<Voxel> addedVoxels = new ArrayList<>(); //stores the set of candidate voxels to be added to the key (neighbours but not below the anchors)
-        addedVoxels = (ArrayList)selectedPiece.clone(); //initialized to the selected piece
+        addedVoxels = (ArrayList)piece.clone(); //initialized to the selected piece
         System.out.println("Debug printing the removable piece...");
         debugPrintVoxels(addedVoxels);
         ArrayList addedVoxels2 = addVoxels(addedVoxels);
@@ -364,7 +362,7 @@ public class Puzlock {
     }
     
     /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
-    static void initializeVoxelArray(int [][][] vMesh){
+    static ArrayList<Voxel> initializeVoxelArray(int[][][] vMesh){
         for (int z=0; z<vMesh.length; z++){
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
@@ -379,10 +377,11 @@ public class Puzlock {
                 }
             }
         }
+        return voxels;
     }
     
     /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
-    static void initializeOutputArray(int [][][] vMesh){
+    static ArrayList<Voxel> initializeOutputArray(int [][][] vMesh){
         for (int z=0; z<vMesh.length; z++){
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
@@ -393,6 +392,7 @@ public class Puzlock {
                 }
             }
         }
+        return outputVoxels;
     }
     
     /* Takes in a 3D array and prints it to console with each z-axis layer being separated by '---'*/
@@ -421,14 +421,13 @@ public class Puzlock {
         return size;
     }
     
-    /* takes in a set of co-ordinates and returns the index of it on the arraylist */
-    static synchronized int indexOfCoordinate(int x, int y, int z){
+    /* takes in a set of co-ordinates and returns the index of it on the arraylist 
+    sizeOfAxes is the number of voxels (ones on the in the inputGrid's x-axis)*/
+    static synchronized int indexOfCoordinate(int x, int y, int z, int sizeOfAxes){
         int index = 0;
-        int size = inputVoxelizedMeshSize; //this size is the number of xs i.e. voxels (ones on the in the inputGrid's x-axis)
-        int size2 = size*size; //this size is the number of xs times the number of ys; indicates where z would start given 0..n
         index = index + (x*1);
-        index = index + (y*size);
-        index = index + (z*size2);
+        index = index + (y*sizeOfAxes);
+        index = index + (z*sizeOfAxes*sizeOfAxes);
         return index;
     }
     
@@ -442,7 +441,7 @@ public class Puzlock {
     }
     
     /* Takes in a puzzle piece(as an array) to print and sets it to outputVoxelizedMesh */
-    static void setOutputPieces(ArrayList<Voxel> piece){
+    static int[][][] setOutputPieces(ArrayList<Voxel> piece){
         //remember: current program only works with grids of 32x32x32
         int size = inputVoxelizedMeshSize;
         outputVoxelizedMesh = new int[size][size][size];
@@ -466,15 +465,16 @@ public class Puzlock {
                 }
             }
         }
+        return outputVoxelizedMesh;
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
     static Voxel getLeft(int x, int y, int z){
         try{ //it will either be 0, 1 or null
             if (inputVoxelizedMesh[x-1][y][z] == 1){
-                int index = indexOfCoordinate(x-1, y, z);
+                int index = indexOfCoordinate(x-1, y, z, inputVoxelizedMeshSize);
                 Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
                     System.out.println("ERROR! Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -490,9 +490,9 @@ public class Puzlock {
     static Voxel getRight(int x, int y, int z){
         try{ //it will either be 0, 1 or null
             if (inputVoxelizedMesh[x+1][y][z] == 1){
-                int index = indexOfCoordinate(x+1, y, z);
+                int index = indexOfCoordinate(x+1, y, z, inputVoxelizedMeshSize);
                 Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x+1)+", "+y+", "+z)){
                     System.out.println("ERROR! Voxel right of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x+1)+", "+y+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -508,9 +508,9 @@ public class Puzlock {
     static Voxel getUp(int x, int y, int z){
         try{ //it will either be 0, 1 or null
             if (inputVoxelizedMesh[x][y-1][z] == 1){ 
-                int index = indexOfCoordinate(x, y-1, z);
+                int index = indexOfCoordinate(x, y-1, z, inputVoxelizedMeshSize);
                 Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y-1)+", "+z)){
                     System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -526,9 +526,9 @@ public class Puzlock {
     static Voxel getDown(int x, int y, int z){
         try{ //it will either be 0, 1 or null
             if (inputVoxelizedMesh[x][y+1][z] == 1){
-                int index = indexOfCoordinate(x, y+1, z);
+                int index = indexOfCoordinate(x, y+1, z, inputVoxelizedMeshSize);
                 Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y+1)+", "+z)){
                     System.out.println("ERROR! Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -544,9 +544,9 @@ public class Puzlock {
     static Voxel getForward(int x, int y, int z){
         try{ //it will either be 0, 1 or null
             if (inputVoxelizedMesh[x][y][z+1] == 1){
-                int index = indexOfCoordinate(x, y, z+1);
+                int index = indexOfCoordinate(x, y, z+1, inputVoxelizedMeshSize);
                 Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+y+", "+(z+1))){
                     System.out.println("ERROR! Voxel forward of index: "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z+1));
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -562,9 +562,9 @@ public class Puzlock {
     static Voxel getBackward(int x, int y, int z){
         try{ //it will either be 0, 1 or null
             if (inputVoxelizedMesh[x][y][z-1] == 1){
-                int index = indexOfCoordinate(x, y, z-1);
+                int index = indexOfCoordinate(x, y, z-1, inputVoxelizedMeshSize);
                 Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+y+", "+(z-1))){
                     System.out.println("ERROR! Voxel backward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z-1));
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -612,32 +612,32 @@ public class Puzlock {
     static double sumOfNeighboursAccValues(int x, int y, int z){
         double sum = 0;
         try{if (inputVoxelizedMesh[x-1][y][z] == 1){ //check left
-                int index = indexOfCoordinate(x-1, y, z); //index of left voxel
+                int index = indexOfCoordinate(x-1, y, z, inputVoxelizedMeshSize); //index of left voxel
                 double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;}
         }catch(Exception e){}
         try{if (inputVoxelizedMesh[x+1][y][z] == 1){ //check right
-                int index = indexOfCoordinate(x+1, y, z); //index of left voxel
+                int index = indexOfCoordinate(x+1, y, z, inputVoxelizedMeshSize); //index of left voxel
                 double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;}
         }catch(Exception e){}
         try{if (inputVoxelizedMesh[x][y-1][z] == 1){ //check up
-                int index = indexOfCoordinate(x, y-1, z); //index of left voxel
+                int index = indexOfCoordinate(x, y-1, z, inputVoxelizedMeshSize); //index of left voxel
                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;}
         }catch(Exception e){}
         try{if (inputVoxelizedMesh[x][y+1][z] == 1){ //check down
-                int index = indexOfCoordinate(x, y+1, z); //index of left voxel
+                int index = indexOfCoordinate(x, y+1, z, inputVoxelizedMeshSize); //index of left voxel
                 double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;}
         }catch(Exception e){}
         try{if (inputVoxelizedMesh[x][y][z+1] == 1){ //check forward
-                int index = indexOfCoordinate(x, y, z+1); //index of left voxel
+                int index = indexOfCoordinate(x, y, z+1, inputVoxelizedMeshSize); //index of left voxel
                 double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;}
         }catch(Exception e){}
         try{if (inputVoxelizedMesh[x][y][z-1] == 1){ //check backward
-                int index = indexOfCoordinate(x, y, z-1); //index of left voxel
+                int index = indexOfCoordinate(x, y, z-1, inputVoxelizedMeshSize); //index of left voxel
                 double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;}
         }catch(Exception e){}
