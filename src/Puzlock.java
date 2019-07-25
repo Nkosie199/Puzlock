@@ -61,22 +61,17 @@ public class Puzlock {
         System.out.println("m has been set to "+m+". B has been set to "+B+"!");
         //1. Extacting the key piece...
         //1.1. Pick a seed voxel
-        System.out.println("1.1. Picking a seed voxel...");
         pickSeedVoxel(inputVoxelizedMesh);
         //1.2. Compute voxel accessibility
-        System.out.println("1.2. Computing voxel accessibility...");
         computeVoxelAccessibility();
         //1.3. Ensure blocking and mobility
-        System.out.println("1.3. Ensuring blocking and mobility...");
         ensureBlockingMobility();
         //1.4. Expand the key piece
-        System.out.println("1.4. Expand the key piece...");
         keyPiece = expandKeyPiece(selectedPiece);
         //1.5. Confirm the key piece
-        System.out.println("1.5. Confirm the key piece...");
         confirmKeyPiece(keyPiece);
         //n. Print keyPiece(s)
-        setOutputPieces(keyPiece); //will set outputVoxelizedMesh
+        setOutputPieces(keyPiece, inputVoxelizedMeshSize); //will set outputVoxelizedMesh
         System.out.println("\nDebug printing output mesh and printing to file...");
         debugPrintVoxelizedMesh(outputVoxelizedMesh);
         io.printGridToFile(outputVoxelizedMesh, "keyPiece"); //should print the key piece to a file called keyPiece
@@ -91,7 +86,7 @@ public class Puzlock {
     
     static void debugPrintOutput(ArrayList<Voxel> keyPiece){
         System.out.println("\nCOMPLETE! Debug printing "+keyPiece.size()+" voxels of the final puzzle piece...");
-        setOutputPieces(keyPiece); //represent a new puzzle piece in a 3D array
+        setOutputPieces(keyPiece, inputVoxelizedMeshSize); //represent a new puzzle piece in a 3D array
         debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
         System.out.println("-------------------------------------------------------------------------------------------");
     }
@@ -100,34 +95,35 @@ public class Puzlock {
     //1.1. Pick a seed voxel
     /* takes in an input mesh and  */
     public static void pickSeedVoxel(int[][][] vMesh){
+    	System.out.println("1.1. Picking a seed voxel...");
         //• Identify a set of exterior voxels that have exactly a pair of adjacent exterior faces (with one being on top). 
         //Require that these voxels can move out of the puzzle in one movement.
         int i=0;
         System.out.println("Top: "+top+". Size: "+inputVoxelizedMeshSize);
         for (Voxel v: voxels){
             if (v.y == top){ //i.e. if voxel is at the top
-                if (getLeft(v.x,v.y,v.z) == null){
+                if (getLeft(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
                     //and if the 3D array has 0 or null at the left co-ordinate of that voxel...
                     exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "left";
                     System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
-                if (getRight(v.x,v.y,v.z) == null){
+                if (getRight(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
                     //and if the 3D array has 0 or null at the right co-ordinate of that voxel...
                     exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "right";
                     System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
-                if (getForward(v.x,v.y,v.z) == null){
+                if (getForward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
                     //and if the 3D array has 0 or null at the forward co-ordinate of that voxel...
                     exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "forward";
                     System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
                     i++;
                 }
-                if (getBackward(v.x,v.y,v.z) == null){
+                if (getBackward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
                     //and if the 3D array has 0 or null at the backward co-ordinate of that voxel...
                     exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
                     v.normalDirection = "backward";
@@ -146,6 +142,7 @@ public class Puzlock {
 
     //1.2. Compute voxel accessibility
     static void computeVoxelAccessibility(){
+    	System.out.println("1.2. Computing voxel accessibility...");
         /* • Compute an accessibility value, aj(x), for each voxel x in a remaining volume, and use it later as a heuristic to alleviate fragmentation, 
         where aj(x) is computed by recursively counting the (weighted) number of voxel neighbours: 
         aj(x) = number of neighbors of x, for j = 0
@@ -198,6 +195,7 @@ public class Puzlock {
 
     //1.3. Ensure blocking and mobility
     static void ensureBlockingMobility(){
+    	System.out.println("1.3. Ensuring blocking and mobility...");
         /* • Develop the key piece such that it is removable by a translation along one direction. 
         Identify the normal direction (vn) of the non-upward-facing exterior face of the seed voxel. */
         String vn = seedVoxel.normalDirection; //stores the normal direction
@@ -275,6 +273,7 @@ public class Puzlock {
 
     //1.4. Expand the key piece
     static ArrayList<Voxel> expandKeyPiece(ArrayList<Voxel> piece){
+    	System.out.println("1.4. Expand the key piece...");
         /* • Identify an additional anchor voxel for the direction immobilized by the blocking voxel picked in step 3 – it is furthest away from the blocking
         voxel in direction vn; if no such voxels exist, we use the blocking voxel as the anchor; 
         note that the anchor voxel idea is crucial for the expansion process as the existing blockage 
@@ -297,7 +296,8 @@ public class Puzlock {
 
     //1.5. Confirm the key piece
     static void confirmKeyPiece(ArrayList<Voxel> keyPiece) throws FileNotFoundException, UnsupportedEncodingException{
-        /* • After steps 1 to 4, the key is guaranteed to fulfill all interlocking requirements, except that R2 needs to be simply connected. 
+    	System.out.println("1.5. Confirm the key piece...");
+    	/* • After steps 1 to 4, the key is guaranteed to fulfill all interlocking requirements, except that R2 needs to be simply connected. 
         With the help of accessibilty, the chance of fragmenting R2 (and other remaining volumes) is rather low; 
         hence, testing the connectivity of voxels in R2 at the end of the key piece generation procedure is more efficient than doing it at multiple places. 
         To guarantee that R2 is simply connected, we gather all the voxels next to the key in a set, say Rs, and apply a simple flooding algorithm to test 
@@ -441,25 +441,28 @@ public class Puzlock {
     }
     
     /* Takes in a puzzle piece(as an array) to print and sets it to outputVoxelizedMesh */
-    static int[][][] setOutputPieces(ArrayList<Voxel> piece){
+    static int[][][] setOutputPieces(ArrayList<Voxel> piece, int size){
         //remember: current program only works with grids of 32x32x32
-        int size = inputVoxelizedMeshSize;
         outputVoxelizedMesh = new int[size][size][size];
+        //first initialize outputVoxelizedMesh to all 0s...
+        for (int z = 0; z < size; z++) { //for each voxel...
+            for (int y = 0; y < size; y++) {
+                for (int x = 0; x < size; x++) {
+                	outputVoxelizedMesh[z][y][x] = 0; //set index to 0
+                }
+            }
+        }
+        //now we can add 1s where appropriate...
         for (int i = 0; i < piece.size(); i++) { //for each voxel in the piece...
-            Voxel voxel = piece.get(i); //stores the current voxel
+        	Voxel voxel = piece.get(i); //stores the current voxel
             int xcoord = voxel.x; //stores the current x co-ordinate
             int ycoord = voxel.y; //stores the current y co-ordinate
             int zcoord = voxel.z; //stores the current z co-ordinate
-            for (int z = 0; z < inputVoxelizedMeshSize; z++) { //for each voxel...
-                for (int y = 0; y < inputVoxelizedMeshSize; y++) {
-                    for (int x = 0; x < inputVoxelizedMeshSize; x++) {
-                        if (outputVoxelizedMesh[z][y][x]==1){ //if index has already been set to 1
-                            //do nothing
-                        }
-                        else if ((x==xcoord) && (y==ycoord) && (z==zcoord)){ //if index is 0 or null and the co-ordinates match
-                            outputVoxelizedMesh[z][y][x] = 1; //set index to 1
-                        }else{ //if index is 0 or null and the co-ordinates DO NOT match
-                            outputVoxelizedMesh[z][y][x] = 0; //set index to 0
+        	for (int z = 0; z < size; z++) { //for each voxel...
+                for (int y = 0; y < size; y++) {
+                    for (int x = 0; x < size; x++) {
+                        if ((x==xcoord) && (y==ycoord) && (z==zcoord)){ //if index is 0 or null and the co-ordinates match
+                        	outputVoxelizedMesh[z][y][x] = 1; //set index to 0
                         }
                     }
                 }
@@ -469,12 +472,12 @@ public class Puzlock {
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
-    static Voxel getLeft(int x, int y, int z){
+    static Voxel getLeft(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (inputVoxelizedMesh[x-1][y][z] == 1){
-                int index = indexOfCoordinate(x-1, y, z, inputVoxelizedMeshSize);
-                Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
+            if (vMesh[x-1][y][z] == 1){
+                int index = indexOfCoordinate(x-1, y, z, vMeshSize);
+                Voxel v = voxelArray.get(index);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
                     System.out.println("ERROR! Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -487,12 +490,12 @@ public class Puzlock {
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the right in the inputVoxelizedMesh */
-    static Voxel getRight(int x, int y, int z){
+    static Voxel getRight(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (inputVoxelizedMesh[x+1][y][z] == 1){
-                int index = indexOfCoordinate(x+1, y, z, inputVoxelizedMeshSize);
-                Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
+            if (vMesh[x+1][y][z] == 1){
+                int index = indexOfCoordinate(x+1, y, z, vMeshSize);
+                Voxel v = voxelArray.get(index);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x+1)+", "+y+", "+z)){
                     System.out.println("ERROR! Voxel right of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x+1)+", "+y+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -505,12 +508,12 @@ public class Puzlock {
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel above the inputVoxelizedMesh */
-    static Voxel getUp(int x, int y, int z){
+    static Voxel getUp(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (inputVoxelizedMesh[x][y-1][z] == 1){ 
-                int index = indexOfCoordinate(x, y-1, z, inputVoxelizedMeshSize);
-                Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
+            if (vMesh[x][y-1][z] == 1){ 
+                int index = indexOfCoordinate(x, y-1, z, vMeshSize);
+                Voxel v = voxelArray.get(index);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y-1)+", "+z)){
                     System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -523,12 +526,12 @@ public class Puzlock {
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel beneath the inputVoxelizedMesh */
-    static Voxel getDown(int x, int y, int z){
+    static Voxel getDown(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (inputVoxelizedMesh[x][y+1][z] == 1){
-                int index = indexOfCoordinate(x, y+1, z, inputVoxelizedMeshSize);
-                Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
+            if (vMesh[x][y+1][z] == 1){
+                int index = indexOfCoordinate(x, y+1, z, vMeshSize);
+                Voxel v = voxelArray.get(index);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y+1)+", "+z)){
                     System.out.println("ERROR! Voxel down of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -541,12 +544,12 @@ public class Puzlock {
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel in front of the inputVoxelizedMesh */
-    static Voxel getForward(int x, int y, int z){
+    static Voxel getForward(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (inputVoxelizedMesh[x][y][z+1] == 1){
-                int index = indexOfCoordinate(x, y, z+1, inputVoxelizedMeshSize);
-                Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
+            if (vMesh[x][y][z+1] == 1){
+                int index = indexOfCoordinate(x, y, z+1, vMeshSize);
+                Voxel v = voxelArray.get(index);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+y+", "+(z+1))){
                     System.out.println("ERROR! Voxel forward of index: "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z+1));
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -559,12 +562,12 @@ public class Puzlock {
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel behind the inputVoxelizedMesh */
-    static Voxel getBackward(int x, int y, int z){
+    static Voxel getBackward(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (inputVoxelizedMesh[x][y][z-1] == 1){
-                int index = indexOfCoordinate(x, y, z-1, inputVoxelizedMeshSize);
-                Voxel v = voxels.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, inputVoxelizedMeshSize);
+            if (vMesh[x][y][z-1] == 1){
+                int index = indexOfCoordinate(x, y, z-1, vMeshSize);
+                Voxel v = voxelArray.get(index);
+                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+y+", "+(z-1))){
                     System.out.println("ERROR! Voxel backward of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+y+", "+(z-1));
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
@@ -580,17 +583,17 @@ public class Puzlock {
     static int countNeighbours(Voxel v){
         //neighbour can either be 0, 1 or null...
         int neighbours = 0;
-        if (getLeft(v.x, v.y, v.z) != null){ //check left
+        if (getLeft(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check left
             neighbours++;
-        }if (getRight(v.x, v.y, v.z) != null){ //check right
+        }if (getRight(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check right
             neighbours++;
-        }if (getUp(v.x, v.y, v.z) != null){ //check up
+        }if (getUp(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check up
             neighbours++;
-        }if (getDown(v.x, v.y, v.z) != null){ //check down
+        }if (getDown(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check down
             neighbours++;
-        }if (getForward(v.x, v.y, v.z) != null){ //check forward
+        }if (getForward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check forward
             neighbours++;
-        }if (getBackward(v.x, v.y, v.z) != null){ //check backward
+        }if (getBackward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check backward
             neighbours++;
         }
 //        try{if (inputVoxelizedMesh[x-1][y][z] == 1){neighbours++;} //check left
@@ -661,12 +664,12 @@ public class Puzlock {
         visitedAdjacentVoxels.add(currentVoxel); //add the current voxel from the set of visited voxels
 //        System.out.println(bfsi+") Currently at voxel "+currentVoxel+" at co-ordinates "+currentVoxel.x+", "+currentVoxel.y+", "+currentVoxel.z);
         //visit current voxels neighbours...
-        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
         Voxel voxel1; //voxel of the left of the normal direction, i.e. the blocking
         Voxel voxel2; //voxel of the right of the normal direction, i.e. the blockee
         ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores the set of neighbours
@@ -675,32 +678,32 @@ public class Puzlock {
             if (leftNeighbour != null){ //if there is a left neighbour  
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
@@ -715,32 +718,32 @@ public class Puzlock {
             if (leftNeighbour != null){ //if there is a left neighbour  
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour; 
                 setOfNeighbours.add(voxel1);
-                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
@@ -755,32 +758,32 @@ public class Puzlock {
             if (leftNeighbour != null){ //if there is a left neighbour  
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2); 
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
@@ -795,32 +798,32 @@ public class Puzlock {
             if (leftNeighbour != null){ //if there is a left neighbour  
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2);
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
-                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z);
+                voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                 breadthFirstTraversal3(voxel1,voxel2); 
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
@@ -863,12 +866,12 @@ public class Puzlock {
                     Voxel currentVoxel = addedVoxels.get(i);
                     if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors
                         //add neighbouring voxels (excluding the anchors or beneath them) until addedVoxels.size() > m...
-                        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-                        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-                        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-                        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
+                        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+                        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+                        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
                         if ((!setOfCandidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
                             setOfCandidates.add(leftNeighbour);
                         }if ((!setOfCandidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
@@ -902,12 +905,12 @@ public class Puzlock {
         ArrayList<ArrayList> setOfUpNeighbours = new ArrayList<>(); //each neighbouring candidate and the voxels above will be contained in the set of neighbours
         double sumOfPis = 0;
         for (Voxel v: setOfCandidates) { //this loop is used for calculating pi and the sumOfPis
-            Voxel upNeighbour = getUp(v.x, v.y, v.z);
+            Voxel upNeighbour = getUp(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
             ArrayList<Voxel> upNeighbours = new ArrayList<>(); //stores the list of voxels above the current voxel
             upNeighbours.add(v); //add the current voxel to the set
             while (upNeighbour!=null){ //for each neighbour above the current voxel
                 upNeighbours.add(upNeighbour); //add the upNeighbour to the set of upNeighbours
-                upNeighbour = getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z); //set upNeighbour to the voxel above the current upNeighbour
+                upNeighbour = getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); //set upNeighbour to the voxel above the current upNeighbour
             }
             double sum = sumOfAccessVals(upNeighbours); //adds the sum of voxels above each voxel (ui)
             double pi = Math.pow(sum, -B); //pi = sumi^(-β) i.e. the weighted sum
@@ -955,12 +958,12 @@ public class Puzlock {
         //1) gather all voxels next to the keyPiece in a set (Rs)...
         ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
         for (Voxel v: keyPiece){ //for each voxel, get its neighbours
-            Voxel leftNeighbour = getLeft(v.x, v.y, v.z); 
-            Voxel rightNeighbour = getRight(v.x, v.y, v.z); 
-            Voxel upNeighbour = getUp(v.x, v.y, v.z);
-            Voxel downNeighbour = getDown(v.x, v.y, v.z);
-            Voxel forwardNeighbour = getForward(v.x, v.y, v.z);
-            Voxel backwardNeighbour = getBackward(v.x, v.y, v.z);
+            Voxel leftNeighbour = getLeft(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+            Voxel rightNeighbour = getRight(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+            Voxel upNeighbour = getUp(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+            Voxel downNeighbour = getDown(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+            Voxel forwardNeighbour = getForward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+            Voxel backwardNeighbour = getBackward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
             if (leftNeighbour != null){ //if there is a left neighbour
                 if((!keyPiece.contains(leftNeighbour)) && (!setOfNeighbours.contains(leftNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
                     setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
@@ -1034,12 +1037,12 @@ public class Puzlock {
     static void floodFill2(ArrayList<Voxel> unvisitedVoxels, Voxel firstVoxel){
         ArrayList<Voxel> visitedVoxels = new ArrayList<>();
         if (!unvisitedVoxels.isEmpty()){ //until the set of unvisited voxels is empty. We will go from the first voxel and try to visit every neighbour until the set is empty
-            Voxel leftNeighbour = getLeft(firstVoxel.x, firstVoxel.y, firstVoxel.z); 
-            Voxel rightNeighbour = getRight(firstVoxel.x, firstVoxel.y, firstVoxel.z); 
-            Voxel upNeighbour = getUp(firstVoxel.x, firstVoxel.y, firstVoxel.z);
-            Voxel downNeighbour = getDown(firstVoxel.x, firstVoxel.y, firstVoxel.z);
-            Voxel forwardNeighbour = getForward(firstVoxel.x, firstVoxel.y, firstVoxel.z);
-            Voxel backwardNeighbour = getBackward(firstVoxel.x, firstVoxel.y, firstVoxel.z);
+            Voxel leftNeighbour = getLeft(firstVoxel.x, firstVoxel.y, firstVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+            Voxel rightNeighbour = getRight(firstVoxel.x, firstVoxel.y, firstVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
+            Voxel upNeighbour = getUp(firstVoxel.x, firstVoxel.y, firstVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+            Voxel downNeighbour = getDown(firstVoxel.x, firstVoxel.y, firstVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+            Voxel forwardNeighbour = getForward(firstVoxel.x, firstVoxel.y, firstVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+            Voxel backwardNeighbour = getBackward(firstVoxel.x, firstVoxel.y, firstVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
             if (leftNeighbour != null){ //if there is a left neighbour
                 if(unvisitedVoxels.contains(leftNeighbour) && (!visitedVoxels.contains(leftNeighbour))){ //if neighbour is in the set of unvisited voxels and not in the set of visited voxels
                     visitedVoxels.add(leftNeighbour); //add it to the set of visited voxels

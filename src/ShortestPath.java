@@ -38,12 +38,12 @@ public class ShortestPath {
         Voxel currentVoxel = source;
         //1. Visit the unvisited vertex with the smallest know distance from the start vertex...
         while (!unvisitedVoxels.isEmpty()) {
-            Voxel leftNeighbour = puzlock.getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-            Voxel rightNeighbour = puzlock.getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z); 
-            Voxel upNeighbour = puzlock.getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-            Voxel downNeighbour = puzlock.getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-            Voxel forwardNeighbour = puzlock.getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z);
-            Voxel backwardNeighbour = puzlock.getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z);          
+            Voxel leftNeighbour = puzlock.getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels); 
+            Voxel rightNeighbour = puzlock.getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels); 
+            Voxel upNeighbour = puzlock.getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
+            Voxel downNeighbour = puzlock.getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
+            Voxel forwardNeighbour = puzlock.getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
+            Voxel backwardNeighbour = puzlock.getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);          
             if ((leftNeighbour != null) && (!leftNeighbour.equals(blocking)) && (leftNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a left neighbour and it is not the blocking voxel and its new shortest distance is less than the old one
                 leftNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 leftNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
@@ -170,7 +170,7 @@ public class ShortestPath {
                 removablePiece.add(currentVoxel); //add the current voxel
                 System.out.print(currentVoxel.getCoordinates()+"(in path); ");
                 for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
-                    Voxel above = puzlock.getUp(currentVoxel.x, k, currentVoxel.z);
+                    Voxel above = puzlock.getUp(currentVoxel.x, k, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
                     if ((above != null) && (!removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
                         removablePiece.add(above); //add it to the set of candidate voxels (represented in figure 9(e))
                         System.out.print(above.getCoordinates()+"(on top); ");

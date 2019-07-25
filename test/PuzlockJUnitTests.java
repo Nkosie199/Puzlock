@@ -23,51 +23,38 @@ public class PuzlockJUnitTests {
     }
     
     //unit testing for every Puzlock method which generates results comparable with expectations...
-    @Test
-    public void initializeVoxelArray() {
-        //ArrayList<Voxel> initializeVoxelArray(int[][][] vMesh)
-        int[][][] input1= {
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
-        };
-        ArrayList<Voxel> actualResult = puzlock.initializeVoxelArray(input1);
-        ArrayList<Voxel> expectedResult = new ArrayList<>();
-        for (int z = 0; z < 4; z++) {
-            for (int y = 0; y < 4; y++) {
-                for (int x = 0; x < 4; x++) {
-                    expectedResult.add(new Voxel(x, y, z));
-                }
-            }
-        }
-        assertEquals(expectedResult, actualResult);
-    }
     
     @Test
     public void expandKeyPiece() {
         //ArrayList<Voxel> expandKeyPiece(ArrayList piece)
         int[][][] outputPiece = {
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
         }; //the inputPiece made removable by adding voxels on top of each voxel
         ArrayList<Voxel> expectedResult = new ArrayList<>();
         expectedResult = puzlock.initializeVoxelArray(outputPiece);
         //now lets setup the input piece to get the actual result...
+        /* Example of removable piece to be expanded (normal direction is backward, seed is at 0,0,0):
+        0) Voxel@232204a1 is at 3,0,1
+        1) Voxel@61bbe9ba is at 2,0,1
+        2) Voxel@42a57993 is at 2,0,0
+        3) Voxel@3d4eac69 is at 1,0,0
+        4) Voxel@55f96302 is at 0,0,0
+        */
         int[][][] inputPiece = {
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
-        }; //remember to set this piece correctly
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
         ArrayList<Voxel> input1 = new ArrayList<>();
         input1 = puzlock.initializeVoxelArray(inputPiece);
         ArrayList<Voxel> actualResult = puzlock.expandKeyPiece(input1);
         assertEquals(expectedResult, actualResult);
     }
-    /*
+    
     @Test
     public void indexOfCoordinate() {
         //int indexOfCoordinate(int x, int y, int z, int sizeOfAxes)
@@ -80,19 +67,6 @@ public class PuzlockJUnitTests {
         assertEquals(expectedResult, actualResult);
     }
     
-    @Test
-    public void initializeOutputArray() {
-        //ArrayList<Voxel> initializeOutputArray(int [][][] vMesh)
-        int[][][] input1 = {
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
-            {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
-        };
-        ArrayList<Voxel> expectedResult = new ArrayList<>(); //yet to implement
-        ArrayList<Voxel> actualResult = puzlock.initializeOutputArray(input1);
-        assertEquals(expectedResult, actualResult);
-    }
     
     @Test
     public void computeMeshSize() {
@@ -103,32 +77,70 @@ public class PuzlockJUnitTests {
             {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
             {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}
         };
-        int expectedResult = 16;
+        int expectedResult = 64;
         int actualResult = puzlock.computeMeshSize(input1);
         assertEquals(expectedResult, actualResult);
     }
-    
+    /*
     @Test
     public void setOutputPieces() {
         //int[][][] setOutputPieces(ArrayList<Voxel> piece)
-        ArrayList<Voxel> input1 = new ArrayList<>(); //yet to implement
-        int[][][] expectedResult = new int[32][32][32]; //yet to implement
-        int[][][] actualResult = puzlock.setOutputPieces(input1);
+    	int[][][] piece = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+        ArrayList<Voxel> input1 = puzlock.initializeVoxelArray(piece);
+        //System.out.println("debug printing the input arraylist...");
+        //for	(int i=0; i<input1.size(); i++) {
+        //	System.out.print(input1.get(i)+" ");
+        //}
+        int[][][] expectedResult = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+        int[][][] actualResult = puzlock.setOutputPieces(input1, 4);
         assertEquals(expectedResult, actualResult);
     }
+    */
     
-    //yet to implement get<Direction>...
     @Test
     public void getLeft() {
-        //Voxel getLeft(int x, int y, int z)
-        int input1 = 5;
-        int input2 = 4;
-        int input3 = 4;
-        int expectedResult = input1+input2;
-        int actualResult = examples.add(5, 4);
+        //Voxel getLeft(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray)
+    	int[][][] piece = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+    	int input1 = 3;
+        int input2 = 0;
+        int input3 = 1;
+        int[][][] input4 = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+        int input5 = 4;
+        ArrayList<Voxel> input6 = puzlock.initializeVoxelArray(input4);
+        System.out.println("Voxel left of "+input1+","+input2+","+input3);
+        System.out.println("debug printing the input arraylist...");
+        for	(int i=0; i<input6.size(); i++) {
+        	Voxel v = input6.get(i);
+        	System.out.print(v+"@"+v.getCoordinates()+" ");
+        }
+        System.out.println("\n---");
+        Voxel expectedResult = input6.get(5); //the sixth voxel to be added is the left neighbour
+        System.out.println("Expected: "+expectedResult.getCoordinates());
+        Voxel actualResult = puzlock.getLeft(input1, input2, input3, input4, input5, input6);
+        System.out.println("Actual: "+actualResult.getCoordinates());
         assertEquals(expectedResult, actualResult);
     }
-    
+    /*
     @Test
     public void getRight() {
         //Voxel getRight(int x, int y, int z)
