@@ -370,7 +370,11 @@ public class Puzlock {
                         if ((y < top) || (top==-1)){ //if the is a lesser y-coordinate or if it has not yet been set, update top
                             top = y;
                         }
-                        Voxel v = new Voxel(x,y,z);
+                        Voxel v = new Voxel(x,y,z,1);
+                        voxels.add(v);
+                        voxels2.add(v);
+                    }else if (vMesh[z][y][x] == 0){//only if index == 0
+                        Voxel v = new Voxel(x,y,z,0);
                         voxels.add(v);
                         voxels2.add(v);
                     }
@@ -386,7 +390,10 @@ public class Puzlock {
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
                     if (vMesh[z][y][x] == 1){//only if index == 1
-                        Voxel v = new Voxel(x,y,z);
+                        Voxel v = new Voxel(x,y,z,1);
+                        outputVoxels.add(v);
+                    }else if (vMesh[z][y][x] == 0){//only if index == 0
+                        Voxel v = new Voxel(x,y,z,0);
                         outputVoxels.add(v);
                     }
                 }
@@ -474,8 +481,10 @@ public class Puzlock {
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
     static Voxel getLeft(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (vMesh[x-1][y][z] == 1){
-                int index = indexOfCoordinate(x-1, y, z, vMeshSize);
+        	System.out.println("Left in vMesh: "+vMesh[x-1][y][z]+" at co-ordinates "+(x-1)+","+y+","+z+". Given mesh size: "+vMeshSize);
+        	int index = indexOfCoordinate(x-1, y, z, vMeshSize);
+            System.out.println("Index: "+index);
+        	if (vMesh[x-1][y][z] == 1){
                 Voxel v = voxelArray.get(index);
                 int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
@@ -485,7 +494,9 @@ public class Puzlock {
                 }
                 return v;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+        	System.out.println("Exception: "+e);
+        }
         return null;
     }
     
@@ -503,7 +514,9 @@ public class Puzlock {
                 }
                 return v;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+        	System.out.println("Exception: "+e);
+        }
         return null;
     }
     
@@ -521,7 +534,9 @@ public class Puzlock {
                 }
                 return v;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+        	System.out.println("Exception: "+e);
+        }
         return null;
     }
     
@@ -539,7 +554,9 @@ public class Puzlock {
                 }
                 return v;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+        	System.out.println("Exception: "+e);
+        }
         return null;
     }
     
@@ -557,7 +574,9 @@ public class Puzlock {
                 }
                 return v;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+        	System.out.println("Exception: "+e);
+        }
         return null;
     }
     
@@ -575,7 +594,9 @@ public class Puzlock {
                 }
                 return v;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+        	System.out.println("Exception: "+e);
+        }
         return null;
     }
     

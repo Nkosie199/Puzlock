@@ -137,7 +137,11 @@ public class PuzlockJUnitTests {
         Voxel expectedResult = input6.get(5); //the sixth voxel to be added is the left neighbour
         System.out.println("Expected: "+expectedResult.getCoordinates());
         Voxel actualResult = puzlock.getLeft(input1, input2, input3, input4, input5, input6);
-        System.out.println("Actual: "+actualResult.getCoordinates());
+        if (actualResult!=null) {
+        	System.out.println("Actual: "+actualResult.getCoordinates()); //NullPointerException if left is null
+        }else {
+        	System.out.println("Actual: null");
+        }
         assertEquals(expectedResult, actualResult);
     }
     /*
