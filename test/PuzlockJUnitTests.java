@@ -52,7 +52,8 @@ public class PuzlockJUnitTests {
         ArrayList<Voxel> input1 = new ArrayList<>();
         input1 = puzlock.initializeVoxelArray(inputPiece);
         ArrayList<Voxel> actualResult = puzlock.expandKeyPiece(input1);
-        assertEquals(expectedResult, actualResult);
+        //please note that the expansion may occur in many ways therefore is is more accurate to compare by size...
+        assertEquals(expectedResult.size(), actualResult.size());
     }
     
     @Test
@@ -110,31 +111,27 @@ public class PuzlockJUnitTests {
     @Test
     public void getLeft() {
         //Voxel getLeft(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray)
-    	int[][][] piece = {
-            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
-            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
-            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
-            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-        };
-    	int input1 = 3;
-        int input2 = 0;
-        int input3 = 1;
+    	int input1 = 3; //x
+        int input2 = 0; //y
+        int input3 = 1; //z
         int[][][] input4 = {
             {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
             {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
             {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
             {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
         };
-        int input5 = 4;
+        //int input5 = puzlock.computeMeshSize(input4);
+        int input5 = input4[0].length;
         ArrayList<Voxel> input6 = puzlock.initializeVoxelArray(input4);
         System.out.println("Voxel left of "+input1+","+input2+","+input3);
+        /*
         System.out.println("debug printing the input arraylist...");
         for	(int i=0; i<input6.size(); i++) {
         	Voxel v = input6.get(i);
-        	System.out.print(v+"@"+v.getCoordinates()+" ");
-        }
+        	System.out.println(i+") "+v+"@"+v.getCoordinates()+": "+v.value);
+        }*/
         System.out.println("\n---");
-        Voxel expectedResult = input6.get(5); //the sixth voxel to be added is the left neighbour
+        Voxel expectedResult = input6.get(18); //the 18th voxel to be added is the left neighbour
         System.out.println("Expected: "+expectedResult.getCoordinates());
         Voxel actualResult = puzlock.getLeft(input1, input2, input3, input4, input5, input6);
         if (actualResult!=null) {
@@ -144,37 +141,107 @@ public class PuzlockJUnitTests {
         }
         assertEquals(expectedResult, actualResult);
     }
-    /*
+    
     @Test
     public void getRight() {
         //Voxel getRight(int x, int y, int z)
-        int input1 = 5;
-        int input2 = 4;
-        int expectedResult = input1+input2;
-        int actualResult = examples.add(5, 4);
+    	int input1 = 3; //x
+        int input2 = 0; //y
+        int input3 = 1; //z
+        int[][][] input4 = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+        //int input5 = puzlock.computeMeshSize(input4);
+        int input5 = input4[0].length;
+        ArrayList<Voxel> input6 = puzlock.initializeVoxelArray(input4);
+        System.out.println("Voxel right of "+input1+","+input2+","+input3);
+        /*
+        System.out.println("debug printing the input arraylist...");
+        for	(int i=0; i<input6.size(); i++) {
+        	Voxel v = input6.get(i);
+        	System.out.println(i+") "+v+"@"+v.getCoordinates()+": "+v.value);
+        }*/
+        System.out.println("\n---");
+        Voxel expectedResult = null; //the 18th voxel to be added is the right neighbour
+        System.out.println("Expected: "+expectedResult);
+        Voxel actualResult = puzlock.getRight(input1, input2, input3, input4, input5, input6);
+        if (actualResult!=null) {
+        	System.out.println("Actual: "+actualResult.getCoordinates()); //NullPointerException if left is null
+        }else {
+        	System.out.println("Actual: null");
+        }
         assertEquals(expectedResult, actualResult);
     }
+    
     
     @Test
     public void getUp() {
         //Voxel getUp(int x, int y, int z)
-        int input1 = 5;
-        int input2 = 4;
-        int expectedResult = input1+input2;
-        int actualResult = examples.add(5, 4);
+    	int input1 = 3; //x
+        int input2 = 0; //y
+        int input3 = 1; //z
+        int[][][] input4 = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+        //int input5 = puzlock.computeMeshSize(input4);
+        int input5 = input4[0].length;
+        ArrayList<Voxel> input6 = puzlock.initializeVoxelArray(input4);
+        System.out.println("Voxel up of "+input1+","+input2+","+input3);
+        /*System.out.println("debug printing the input arraylist...");
+        for	(int i=0; i<input6.size(); i++) {
+        	Voxel v = input6.get(i);
+        	System.out.println(i+") "+v+"@"+v.getCoordinates()+": "+v.value);
+        }*/
+        System.out.println("\n---");
+        Voxel expectedResult = null;; //the 35th voxel to be added is the up neighbour
+        System.out.println("Expected: "+expectedResult);
+        Voxel actualResult = puzlock.getUp(input1, input2, input3, input4, input5, input6);
+        if (actualResult!=null) {
+        	System.out.println("Actual: "+actualResult.getCoordinates()); //NullPointerException if left is null
+        }else {
+        	System.out.println("Actual: null");
+        }
         assertEquals(expectedResult, actualResult);
     }
     
     @Test
     public void getDown() {
         //Voxel getDown(int x, int y, int z)
-        int input1 = 5;
-        int input2 = 4;
-        int expectedResult = input1+input2;
-        int actualResult = examples.add(5, 4);
+    	int input1 = 3; //x
+        int input2 = 0; //y
+        int input3 = 1; //z
+        int[][][] input4 = {
+            {{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{1, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+            {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+        };
+        int input5 = input4[0].length;
+        ArrayList<Voxel> input6 = puzlock.initializeVoxelArray(input4);
+        System.out.println("Voxel down of "+input1+","+input2+","+input3);
+        /*System.out.println("debug printing the input arraylist...");
+        for	(int i=0; i<input6.size(); i++) {
+        	Voxel v = input6.get(i);
+        	System.out.println(i+") "+v+"@"+v.getCoordinates()+": "+v.value);
+        }*/
+        System.out.println("\n---");
+        Voxel expectedResult = input6.get(23); //the 23rd voxel to be added is the down neighbour
+        System.out.println("Expected: "+expectedResult.getCoordinates());
+        Voxel actualResult = puzlock.getDown(input1, input2, input3, input4, input5, input6);
+        if (actualResult!=null) {
+        	System.out.println("Actual: "+actualResult.getCoordinates()); //NullPointerException if down is null
+        }else {
+        	System.out.println("Actual: null");
+        }
         assertEquals(expectedResult, actualResult);
     }
-    
+    /*
     @Test
     public void getForward() {
         //Voxel getForward(int x, int y, int z)

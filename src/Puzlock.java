@@ -16,8 +16,8 @@ public class Puzlock {
     static int inputVoxelizedMeshSize; //the size of the array on the z a-axis
     static Voxel voxel;
     static Voxel seedVoxel;
-    static ArrayList<Voxel> voxels = new ArrayList<>(); //used to store the entire set of voxels
-    static ArrayList<Voxel> voxels2 = new ArrayList<>(); //used to store the entire set of voxels, used in ShortestPath class
+    static ArrayList<Voxel> voxels; //used to store the entire set of voxels
+    static ArrayList<Voxel> voxels2; //used to store the entire set of voxels, used in ShortestPath class
     static ArrayList<Voxel> outputVoxels = new ArrayList<>(); //stores the entire set of voxels output i.e. puzzle piece
     static ArrayList<Voxel> exteriorVoxels = new ArrayList<>(); //used to store the set of exterior voxels
     static ArrayList<Integer> accessibilityValues = new ArrayList<>(); //used to store the set of accessibility values
@@ -46,6 +46,7 @@ public class Puzlock {
         //0.1. Read the 3D grid
 //        inputVoxelizedMesh = io.readFileToInputGrid("inputGrid");
         inputVoxelizedMesh = io.readFileToInputGrid("4x4x4");
+        //inputVoxelizedMeshSize = computeMeshSize(inputVoxelizedMesh);
         inputVoxelizedMeshSize = inputVoxelizedMesh[0].length;
         //0.2. Initialize the 1D array representing the 3D grid/array
         initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array and sets the value of top
@@ -363,6 +364,9 @@ public class Puzlock {
     
     /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
     static ArrayList<Voxel> initializeVoxelArray(int[][][] vMesh){
+    	voxels = new ArrayList<>();
+    	voxels2 = new ArrayList<>();
+    	int iterator = 0;
         for (int z=0; z<vMesh.length; z++){
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
@@ -371,12 +375,16 @@ public class Puzlock {
                             top = y;
                         }
                         Voxel v = new Voxel(x,y,z,1);
+                        //System.out.println(iterator+") "+1+" @ "+x+","+y+","+z);
                         voxels.add(v);
                         voxels2.add(v);
+                        iterator++;
                     }else if (vMesh[z][y][x] == 0){//only if index == 0
                         Voxel v = new Voxel(x,y,z,0);
+                        //System.out.println(iterator+") "+0+" @ "+x+","+y+","+z);
                         voxels.add(v);
                         voxels2.add(v);
+                        iterator++;
                     }
                 }
             }
@@ -483,17 +491,26 @@ public class Puzlock {
         try{ //it will either be 0, 1 or null
         	System.out.println("Left in vMesh: "+vMesh[x-1][y][z]+" at co-ordinates "+(x-1)+","+y+","+z+". Given mesh size: "+vMeshSize);
         	int index = indexOfCoordinate(x-1, y, z, vMeshSize);
-            System.out.println("Index: "+index);
+            System.out.println("Index: "+index+" is: "+vMesh[x-1][y][z]);
+            Voxel v = voxelArray.get(index);
+            int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
+            if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
+                System.out.println("ERROR! Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
+                System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                System.out.println("");
+            }
+            return v;
+            /*
         	if (vMesh[x-1][y][z] == 1){
-                Voxel v = voxelArray.get(index);
-                int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
+                //Voxel v = voxelArray.get(index);
+                //int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
                     System.out.println("ERROR! Voxel left of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+(x-1)+", "+y+", "+z);
                     System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
                     System.out.println("");
                 }
-                return v;
-            }
+                //return v;
+            }*/
         }catch(Exception e){
         	System.out.println("Exception: "+e);
         }
@@ -503,8 +520,10 @@ public class Puzlock {
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the right in the inputVoxelizedMesh */
     static Voxel getRight(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (vMesh[x+1][y][z] == 1){
+            if (vMesh[z][y][x+1] == 1){
+            	//System.out.println("Right in vMesh: "+vMesh[x+1][y][z]+" at co-ordinates "+(x+1)+","+y+","+z+". Given mesh size: "+vMeshSize);
                 int index = indexOfCoordinate(x+1, y, z, vMeshSize);
+                //System.out.println("Index: "+index+" is: "+vMesh[x+1][y][z]);
                 Voxel v = voxelArray.get(index);
                 int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x+1)+", "+y+", "+z)){
@@ -523,6 +542,18 @@ public class Puzlock {
     /* Takes in the co-ordinates of voxel and checks if there a voxel above the inputVoxelizedMesh */
     static Voxel getUp(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
+        	System.out.println("Up in vMesh: "+vMesh[x][y-1][z]+" at co-ordinates "+x+","+(y-1)+","+z+". Given mesh size: "+vMeshSize);
+        	int index = indexOfCoordinate(x, y-1, z, vMeshSize);
+            System.out.println("Index: "+index+" is: "+vMesh[x][y-1][z]);
+            Voxel v = voxelArray.get(index);
+            int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
+            if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y-1)+", "+z)){
+                System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y-1)+", "+z);
+                System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                System.out.println("");
+            }
+            return v;
+            /*
             if (vMesh[x][y-1][z] == 1){ 
                 int index = indexOfCoordinate(x, y-1, z, vMeshSize);
                 Voxel v = voxelArray.get(index);
@@ -533,7 +564,7 @@ public class Puzlock {
                     System.out.println("");
                 }
                 return v;
-            }
+            }*/
         }catch(Exception e){
         	System.out.println("Exception: "+e);
         }
@@ -543,7 +574,18 @@ public class Puzlock {
     /* Takes in the co-ordinates of voxel and checks if there a voxel beneath the inputVoxelizedMesh */
     static Voxel getDown(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-            if (vMesh[x][y+1][z] == 1){
+        	System.out.println("Down in vMesh: "+vMesh[z][y+1][x]+" at co-ordinates "+z+","+(y+1)+","+x+". Given mesh size: "+vMeshSize);
+        	int index = indexOfCoordinate(x, y+1, z, vMeshSize);
+            System.out.println("Index: "+index+" is: "+vMesh[x][y+1][z]);
+            Voxel v = voxelArray.get(index);
+            int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
+            if (!(v.x+", "+v.y+", "+v.z).equals(x+", "+(y+1)+", "+z)){
+                System.out.println("ERROR! Voxel up of "+x+", "+y+", "+z+" is at "+v.x+", "+v.y+", "+v.z+". Correct answer: "+x+", "+(y+1)+", "+z);
+                System.out.println("Cuurent index: "+currentIndex+". Correct index: "+index);
+                System.out.println("");
+            }
+            return v;
+            /*if (vMesh[x][y+1][z] == 1){
                 int index = indexOfCoordinate(x, y+1, z, vMeshSize);
                 Voxel v = voxelArray.get(index);
                 int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
@@ -553,7 +595,7 @@ public class Puzlock {
                     System.out.println("");
                 }
                 return v;
-            }
+            }*/
         }catch(Exception e){
         	System.out.println("Exception: "+e);
         }
