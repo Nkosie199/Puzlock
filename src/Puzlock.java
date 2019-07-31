@@ -17,7 +17,6 @@ public class Puzlock {
     static Voxel voxel;
     static Voxel seedVoxel;
     static ArrayList<Voxel> voxels; //used to store the entire set of voxels
-    static ArrayList<Voxel> voxels2; //used to store the entire set of voxels, used in ShortestPath class
     static ArrayList<Voxel> outputVoxels = new ArrayList<>(); //stores the entire set of voxels output i.e. puzzle piece
     static ArrayList<Voxel> exteriorVoxels = new ArrayList<>(); //used to store the set of exterior voxels
     static ArrayList<Integer> accessibilityValues = new ArrayList<>(); //used to store the set of accessibility values
@@ -68,7 +67,7 @@ public class Puzlock {
         //1.3. Ensure blocking and mobility
         ensureBlockingMobility();
         //1.4. Expand the key piece
-        keyPiece = expandKeyPiece(selectedPiece);
+        keyPiece = expandKeyPiece(selectPiece());
         //1.5. Confirm the key piece
         confirmKeyPiece(keyPiece);
         //n. Print keyPiece(s)
@@ -83,6 +82,20 @@ public class Puzlock {
         //2.4. Expand Pi+1 and Confirm it
         System.out.println("\nCOMPLETE!");
 //        debugPrintOutput(keyPiece);
+    }
+    
+    /* find the piece with the smallest sum of accessibility values */
+    static ArrayList<Voxel> selectPiece(){
+        selectedPiece = new ArrayList<>();
+        double currentHighestSum = 1000000; //stores the current lowest sum of accessibility values, initialized to 1000000
+        for (ArrayList rPiece: removablePieces){
+            double currentSum = sumOfAccessVals(rPiece);
+            if (currentSum<currentHighestSum){ //if current sum of accessibility values is the lowest
+                currentHighestSum = currentSum; //set the current highest sum to the current sum
+                selectedPiece = rPiece; //set the selected piece to the current piece
+            }
+        }
+        return selectedPiece;
     }
     
     static void debugPrintOutput(ArrayList<Voxel> keyPiece){
@@ -160,7 +173,7 @@ public class Puzlock {
                         //get the voxel at that index and set its accessibility value...
                         int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
                         Voxel v = voxels.get(index);
-                        int neighbours = countNeighbours(v);
+                        int neighbours = countNeighbours(v,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels);
                         v.accessibilityValue = neighbours;
                         System.out.println(p+") Voxel "+v+" at index "+x+","+y+","+z+" has "+neighbours+" neighbours");
                         p++;
@@ -181,9 +194,9 @@ public class Puzlock {
                         int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
                         double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
                         double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
-                        double sum = sumOfNeighboursAccValues(x,y,z); //stores the sum of accessibilty values of the voxel's neighbours
-                        newAccessValue = voxels.get(index).accessibilityValue + (power * sum);//A = B
+                        double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
                         Voxel v = voxels.get(index);
+                        newAccessValue = v.accessibilityValue + (power * sum);//A = B
                         v.accessibilityValue = newAccessValue;
                         System.out.println(q+") Voxel "+v+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
                         q++;
@@ -236,11 +249,11 @@ public class Puzlock {
             VoxelPair vp = accessibleVoxelPairs.get(i);
             Voxel blocking = vp.getVoxel1();
             Voxel blockee = vp.getVoxel2();
-            System.out.print(i+") "+vp.getVoxel1().accessibilityValue);
-            System.out.println(", voxel pair: "+vp+", blockee is at "+blockee.getCoordinates()+", blocking is at "+blocking.getCoordinates());
-            System.out.println("Shortest path from "+seedVoxel.getCoordinates()+" to "+blockee.getCoordinates()+" where blocking voxel is at "+blocking.getCoordinates()+" and normal direction is "+seedVoxel.normalDirection+"...");
-            ArrayList<Voxel> voxels3 = (ArrayList)voxels2.clone(); //must clone the array to prevent the concurrency issue
-            sp = new ShortestPath(voxels3, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
+            System.out.print(i+") Access value: "+vp.getVoxel1().accessibilityValue);
+            System.out.println(", voxel pair: "+vp+", blockee is at "+blockee.getCoordinates()+", blocking is at "+blocking.getCoordinates()+" and normal direction is "+seedVoxel.normalDirection+"...");
+            System.out.println("Shortest path from "+seedVoxel.getCoordinates()+" (seed) to "+blockee.getCoordinates()+" (blockee)");
+            ArrayList<Voxel> voxels2 = (ArrayList)voxels.clone(); //must clone the array to prevent the concurrency issue
+            sp = new ShortestPath(voxels2, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
             //create new puzzle piece based on the removable piece and add it to the set of stored pieces in Puzlock...
             puzzlePieces.add(new PuzzlePiece(sp.removablePiece, sp.anchorVoxel, sp.anchorVoxel2, blocking, blockee));
         }
@@ -289,7 +302,7 @@ public class Puzlock {
         addedVoxels = (ArrayList)piece.clone(); //initialized to the selected piece
         System.out.println("Debug printing the removable piece...");
         debugPrintVoxels(addedVoxels);
-        ArrayList addedVoxels2 = addVoxels(addedVoxels);
+        ArrayList addedVoxels2 = addVoxels(addedVoxels, puzzlePieces, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels, setOfCandidates, B);
         System.out.println("Debug printing the new piece with added voxels (neighbouring and above) and voxels added by probability (as per subpoint 3's strategy)...");
         debugPrintVoxels(addedVoxels2);
         return addedVoxels;
@@ -365,7 +378,6 @@ public class Puzlock {
     /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
     static ArrayList<Voxel> initializeVoxelArray(int[][][] vMesh){
     	voxels = new ArrayList<>();
-    	voxels2 = new ArrayList<>();
     	int iterator = 0;
         for (int z=0; z<vMesh.length; z++){
             for (int y=0; y<vMesh.length; y++){
@@ -377,13 +389,11 @@ public class Puzlock {
                         Voxel v = new Voxel(x,y,z,1);
                         //System.out.println(iterator+") "+1+" @ "+x+","+y+","+z);
                         voxels.add(v);
-                        voxels2.add(v);
                         iterator++;
                     }else if (vMesh[z][y][x] == 0){//only if index == 0
                         Voxel v = new Voxel(x,y,z,0);
                         //System.out.println(iterator+") "+0+" @ "+x+","+y+","+z);
                         voxels.add(v);
-                        voxels2.add(v);
                         iterator++;
                     }
                 }
@@ -502,7 +512,7 @@ public class Puzlock {
                 return v;
             }
         }catch(Exception e){
-        	System.out.println("Exception: "+e);
+            //System.out.println("Exception: "+e);
         }
         return null;
     }
@@ -523,7 +533,7 @@ public class Puzlock {
                 return v;
             }
         }catch(Exception e){
-        	System.out.println("Exception: "+e);
+            //System.out.println("Exception: "+e);
         }
         return null;
     }
@@ -543,7 +553,7 @@ public class Puzlock {
                 return v;
             }
         }catch(Exception e){
-        	System.out.println("Exception: "+e);
+            //System.out.println("Exception: "+e);
         }
         return null;
     }
@@ -563,7 +573,7 @@ public class Puzlock {
                 return v;
             }
         }catch(Exception e){
-        	System.out.println("Exception: "+e);
+            //System.out.println("Exception: "+e);
         }
         return null;
     }
@@ -583,7 +593,7 @@ public class Puzlock {
                 return v;
             }
         }catch(Exception e){
-        	System.out.println("Exception: "+e);
+            //System.out.println("Exception: "+e);
         }
         return null;
     }
@@ -603,26 +613,32 @@ public class Puzlock {
                 return v;
             }
         }catch(Exception e){
-        	System.out.println("Exception: "+e);
+            //System.out.println("Exception: "+e);
         }
         return null;
     }
     
     /* Takes in a voxel's co-ordinates and counts its neighbours */
-    static int countNeighbours(Voxel v){
+    static int countNeighbours(Voxel v, int[][][] vMesh, int vMeshSize, ArrayList vs){
         //neighbour can either be 0, 1 or null...
         int neighbours = 0;
-        if (getLeft(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check left
+        Voxel left = getLeft(v.x, v.y, v.z, vMesh, vMeshSize, vs);
+        Voxel right = getRight(v.x, v.y, v.z, vMesh, vMeshSize, vs);
+        Voxel up = getUp(v.x, v.y, v.z, vMesh, vMeshSize, vs);
+        Voxel down = getDown(v.x, v.y, v.z, vMesh, vMeshSize, vs);
+        Voxel forward = getForward(v.x, v.y, v.z, vMesh, vMeshSize, vs);
+        Voxel backward = getBackward(v.x, v.y, v.z, vMesh, vMeshSize, vs);
+        if (left != null && left.value == 1){ //check left
             neighbours++;
-        }if (getRight(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check right
+        }if (right != null && right.value == 1){ //check right
             neighbours++;
-        }if (getUp(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check up
+        }if (up != null && up.value == 1){ //check up
             neighbours++;
-        }if (getDown(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check down
+        }if (down != null && down.value == 1){ //check down
             neighbours++;
-        }if (getForward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check forward
+        }if (forward != null && forward.value == 1){ //check forward
             neighbours++;
-        }if (getBackward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) != null){ //check backward
+        }if (backward != null && backward.value == 1){ //check backward
             neighbours++;
         }
 //        try{if (inputVoxelizedMesh[x-1][y][z] == 1){neighbours++;} //check left
@@ -641,38 +657,68 @@ public class Puzlock {
     }
     
     /* Takes in a voxel's co-ordinates and counts its neighbours */
-    static double sumOfNeighboursAccValues(int x, int y, int z){
+    static double sumOfNeighboursAccValues(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> vs){
         double sum = 0;
-        try{if (inputVoxelizedMesh[x-1][y][z] == 1){ //check left
-                int index = indexOfCoordinate(x-1, y, z, inputVoxelizedMeshSize); //index of left voxel
-                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
-                sum = sum + accVal;}
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x+1][y][z] == 1){ //check right
-                int index = indexOfCoordinate(x+1, y, z, inputVoxelizedMeshSize); //index of left voxel
-                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
-                sum = sum + accVal;}
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y-1][z] == 1){ //check up
-                int index = indexOfCoordinate(x, y-1, z, inputVoxelizedMeshSize); //index of left voxel
-               double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
-                sum = sum + accVal;}
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y+1][z] == 1){ //check down
-                int index = indexOfCoordinate(x, y+1, z, inputVoxelizedMeshSize); //index of left voxel
-                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
-                sum = sum + accVal;}
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y][z+1] == 1){ //check forward
-                int index = indexOfCoordinate(x, y, z+1, inputVoxelizedMeshSize); //index of left voxel
-                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
-                sum = sum + accVal;}
-        }catch(Exception e){}
-        try{if (inputVoxelizedMesh[x][y][z-1] == 1){ //check backward
-                int index = indexOfCoordinate(x, y, z-1, inputVoxelizedMeshSize); //index of left voxel
-                double accVal = voxels.get(index).accessibilityValue; //accessibilty value of the voxel at that index
-                sum = sum + accVal;}
-        }catch(Exception e){}
+        try{if (vMesh[z][y][x-1] == 1){ //check left
+                int index = indexOfCoordinate(x-1, y, z, vMeshSize); //index of left voxel
+                Voxel v = vs.get(index);
+                double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to left neighbour @ "+v.x+","+v.y+","+v.z);
+            }
+        }catch(Exception e){
+        	//System.out.println("Exception: "+e);
+        }
+        try{if (vMesh[z][y][x+1] == 1){ //check right
+                int index = indexOfCoordinate(x+1, y, z, vMeshSize); //index of right voxel
+                Voxel v = vs.get(index);
+                double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to right neighbour @ "+v.x+","+v.y+","+v.z);
+        	}
+        }catch(Exception e){
+        	//System.out.println("Exception: "+e);
+        }
+        try{if (vMesh[z][y-1][x] == 1){ //check up
+                int index = indexOfCoordinate(x, y-1, z, vMeshSize); //index of up voxel
+                Voxel v = vs.get(index);
+                double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to up neighbour @ "+v.x+","+v.y+","+v.z);
+        	}
+        }catch(Exception e){
+        	//System.out.println("Exception: "+e);
+        }
+        try{if (vMesh[z][y+1][x] == 1){ //check down
+                int index = indexOfCoordinate(x, y+1, z, vMeshSize); //index of down voxel
+                Voxel v = vs.get(index);
+                double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to down neighbour @ "+v.x+","+v.y+","+v.z);
+        	}
+        }catch(Exception e){
+        	//System.out.println("Exception: "+e);
+        }
+        try{if (vMesh[z+1][y][x] == 1){ //check forward
+                int index = indexOfCoordinate(x, y, z+1, vMeshSize); //index of forward voxel
+                Voxel v = vs.get(index);
+                double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to forward neighbour @ "+v.x+","+v.y+","+v.z);
+        	}
+        }catch(Exception e){
+        	//System.out.println("Exception: "+e);
+        }
+        try{if (vMesh[z-1][y][x] == 1){ //check backward
+                int index = indexOfCoordinate(x, y, z-1, vMeshSize); //index of backward voxel
+                Voxel v = vs.get(index);
+                double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
+                sum = sum + accVal;
+                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to backward neighbour @ "+v.x+","+v.y+","+v.z);
+        	}
+        }catch(Exception e){
+        	//System.out.println("Exception: "+e);
+        }
         return sum; //return the sum...
     }
     
@@ -883,9 +929,9 @@ public class Puzlock {
         return sum;
     }
     
-    static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels){
+    static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels, ArrayList<PuzzlePiece> pieces, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> vs, ArrayList<Voxel> candidates, int beta){
         //perhaps we will need a set of neighbours?
-        for (PuzzlePiece p: puzzlePieces) { //find piece p...
+        for (PuzzlePiece p: pieces) { //find piece p...
 //            System.out.println("Selected piece is: "); debugPrintVoxels(addedVoxels); System.out.println(". Current piece is: "); debugPrintVoxels(p.piece);
             if (p.piece.equals(addedVoxels)){ //once we have retrieved our selected piece from the set of puzzle pieces generated and made removable
                 Voxel anchor = p.anchorVoxel;
@@ -893,72 +939,73 @@ public class Puzlock {
                 System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates());
                 for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
                     Voxel currentVoxel = addedVoxels.get(i);
-                    if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors
+                    if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors and is actually a voxel (set to 1)
                         //add neighbouring voxels (excluding the anchors or beneath them) until addedVoxels.size() > m...
-                        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
-                        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
-                        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                        if ((!setOfCandidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
-                            setOfCandidates.add(leftNeighbour);
-                        }if ((!setOfCandidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
-                            setOfCandidates.add(rightNeighbour);
-                        }if ((!setOfCandidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
-                            setOfCandidates.add(upNeighbour);
-                        }if ((!setOfCandidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
+                        Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs); 
+                        Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs); 
+                        Voxel upNeighbour = getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs);
+                        Voxel downNeighbour = getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs);
+                        Voxel forwardNeighbour = getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs);
+                        Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs);
+                        if ((!candidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null) && (leftNeighbour.value==1)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            candidates.add(leftNeighbour);
+                        }if ((!candidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null) && (rightNeighbour.value==1)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            candidates.add(rightNeighbour);
+                        }if ((!candidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null) && (upNeighbour.value==1)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            candidates.add(upNeighbour);
+                        }if ((!candidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null)  && (downNeighbour.value==1) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
                             //if there is a down neighbour which is not already contained in addedVoxels nor in the set of candidates 
                             //and if it does not have a y-coordinate greater that either anchor given the same x and z
-                            setOfCandidates.add(downNeighbour);
-                        }if ((!setOfCandidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
-                            setOfCandidates.add(forwardNeighbour);
-                        }if ((!setOfCandidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
-                            setOfCandidates.add(backwardNeighbour);
+                            candidates.add(downNeighbour);
+                        }if ((!candidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null) && (forwardNeighbour.value==1)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            candidates.add(forwardNeighbour);
+                        }if ((!candidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null) && (backwardNeighbour.value==1)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                            candidates.add(backwardNeighbour);
                         }
                     }
                 }
             }
         }
-        ArrayList<Voxel> addedVs = addVoxels2(addedVoxels); //add the voxels above the added neighbour
+        ArrayList<Voxel> addedVs = addVoxels2(addedVoxels, vMesh, vMeshSize, vs, candidates, beta); //add the voxels above the added neighbour
         return addedVs;
     }
    
     /* an implementation of section 1.4 point 2 & 3: Expands the key piece by adding neighbouring voxels by probability value pi2. Returns new set of added nieghbours */
-    static ArrayList<Voxel> addVoxels2(ArrayList<Voxel> addedVoxels){
+    static ArrayList<Voxel> addVoxels2(ArrayList<Voxel> addedVoxels, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> vs, ArrayList<Voxel> candidates, int beta){
         System.out.println("Debug printing the set of candidates...");
-        debugPrintVoxels(setOfCandidates);
+        debugPrintVoxels(candidates);
+        System.out.println("---------------------------------------");
         //debug print the set of candidates
         //compute the sum of accessibility values all voxels in addedVoxels with the same x and z but lower y values than upNeighbour i.e voxels above the added neighbour 
         //for each voxel, check if it's upNeighbour is already contained in the addedVoxels piece...
         ArrayList<ArrayList> setOfUpNeighbours = new ArrayList<>(); //each neighbouring candidate and the voxels above will be contained in the set of neighbours
         double sumOfPis = 0;
-        for (Voxel v: setOfCandidates) { //this loop is used for calculating pi and the sumOfPis
-            Voxel upNeighbour = getUp(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+        for (Voxel v: candidates) { //this loop is used for calculating pi and the sumOfPis
+            Voxel upNeighbour = getUp(v.x, v.y, v.z, vMesh, vMeshSize, vs);
             ArrayList<Voxel> upNeighbours = new ArrayList<>(); //stores the list of voxels above the current voxel
             upNeighbours.add(v); //add the current voxel to the set
             while (upNeighbour!=null){ //for each neighbour above the current voxel
                 upNeighbours.add(upNeighbour); //add the upNeighbour to the set of upNeighbours
-                upNeighbour = getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); //set upNeighbour to the voxel above the current upNeighbour
+                upNeighbour = getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z, vMesh, vMeshSize, vs); //set upNeighbour to the voxel above the current upNeighbour
             }
             double sum = sumOfAccessVals(upNeighbours); //adds the sum of voxels above each voxel (ui)
-            double pi = Math.pow(sum, -B); //pi = sumi^(-β) i.e. the weighted sum
+            double pi = Math.pow(sum, -beta); //pi = sumi^(-β) i.e. the weighted sum
             sumOfPis = sumOfPis+pi; //add this pi to the sim of all pis
             setOfUpNeighbours.add(upNeighbours); //store the set of upNeighbours
         }
         //at this point we should have an array of neighbours above the current voxel; from this we should be able to calculate the pi2 of each voxel
         double sumOfProbabilities = 0;
-        for (int i=0; i<setOfUpNeighbours.size(); i++) { //this loop is used for calculating pi2 gicen the sumOfPis
+        for (int i=0; i<setOfUpNeighbours.size(); i++) { //this loop is used for calculating pi2 given the sumOfPis
             ArrayList<Voxel> upNeighbours = setOfUpNeighbours.get(i);
             double sum = sumOfAccessVals(upNeighbours); //adds the sum of voxels above each voxel (ui)
-            double pi = Math.pow(sum, -B); //pi = sumi^(-β) i.e. the weighted sum
+            double pi = Math.pow(sum, -beta); //pi = sumi^(-β) i.e. the weighted sum
             Voxel ui = upNeighbours.get(0); //each neighbour (ui) will be the first element in the set of upNieghbours
-            if (ui.getCoordinates().equals(setOfCandidates.get(i).getCoordinates())){
+            if (ui.getCoordinates().equals(candidates.get(i).getCoordinates())){
                 ui.pi2 = pi/(sumOfPis); //pi2 = pi/∑ipi, the probability of addeding a voxel piece
                 System.out.println((ui.pi2*100)+" is the probability of choosing voxel @ "+ui.getCoordinates());
                 sumOfProbabilities = sumOfProbabilities + ui.pi2;
             }else{
-                System.out.println("ERROR! Ui is @ "+ui.getCoordinates()+". It is supposed to be @ "+setOfCandidates.get(i).getCoordinates());
+                System.out.println("ERROR! Ui is @ "+ui.getCoordinates()+". It is supposed to be @ "+candidates.get(i).getCoordinates());
             }
         }
         //now we should be able to add voxels from the candidate set according to each ones probability. We must first ensure that the sum of probablities equals 1 (or 100)
@@ -968,9 +1015,9 @@ public class Puzlock {
             int max = (int)(sumOfProbabilities*100); //stores the maximum for the range 0 to sumOfProbilites (1) times 100. It should equal 100
             double randomNum = ThreadLocalRandom.current().nextDouble(0, max); //pick a random number between 0 and the max (100)
             double rum = (double)(randomNum/100);
-            int randomNum2 = (int)(rum*setOfCandidates.size()); ////make the random number represent an index in the set of candidates by dividing it by the size. Should range from 0 to setOfCandidates-1
+            int randomNum2 = (int)(rum*candidates.size()); ////make the random number represent an index in the set of candidates by dividing it by the size. Should range from 0 to setOfCandidates-1
             System.out.println("Random number in the range of 0 - "+max+" is "+randomNum+" which represents index "+randomNum2);
-            Voxel chosenCandidate = setOfCandidates.get(randomNum2); //get the chosen candidate from the appropriate index
+            Voxel chosenCandidate = candidates.get(randomNum2); //get the chosen candidate from the appropriate index
             if (!addedVoxels.contains(chosenCandidate)){ //if the chosen candidate is not already in the array
                 addedVoxels.add(chosenCandidate); //add the chosen candidate to the key piece
                 System.out.print("Chosen candidate voxel is @ "+chosenCandidate.getCoordinates()+"! ");
@@ -984,7 +1031,8 @@ public class Puzlock {
    
     /* Flooding algorithm which helps compleete section 1.5) Confirming the key piece */
     static void floodFill(ArrayList<Voxel> keyPiece) throws FileNotFoundException, UnsupportedEncodingException{
-        //1) gather all voxels next to the keyPiece in a set (Rs)...
+        /*
+    	//1) gather all voxels next to the keyPiece in a set (Rs)...
         ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
         for (Voxel v: keyPiece){ //for each voxel, get its neighbours
             Voxel leftNeighbour = getLeft(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
@@ -1019,11 +1067,18 @@ public class Puzlock {
                 }
             }
         }
-        System.out.println("Debug printing the set of neighbours (Rs)...");
+        */
+        //change of strategy: the set of neighbours will now be the remaining volume...
+    	ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels in the remaining volume
+    	for (Voxel v: voxels) { //for each and every voxel
+			if (!keyPiece.contains(v)) { //if the voxel is not in the keyPiece, add it to the set of neighbours
+				setOfNeighbours.add(v);
+    		}
+    	}
+        System.out.println("Debug printing the set of remaining volume (Rs)...");
         debugPrintVoxels(setOfNeighbours);
         int[][][] neighbours = new int[32][32][32]; //stores the set of neighbours in a 3D array
         for (int h = 0; h < setOfNeighbours.size(); h++) { //for each neighbour voxel
-            Voxel v = setOfNeighbours.get(h); //get the current voxel
             for (int i = 0; i < 32; i++) { //iterates though zs
                 for (int j = 0; j < 32; j++) { //iterates though ys
                     for (int k = 0; k < 32; k++) { //iterates though xs

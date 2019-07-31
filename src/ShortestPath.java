@@ -79,12 +79,12 @@ public class ShortestPath {
         getShortestPath(source, destination); //prints out the path from source to destination in terms of which voxel co-ordinates must be visited 
         setAnchorVoxel(currentShortestPath); //set the anchor voxel among the set of voxels in the current shortest path
         makeRemovable(currentShortestPath, anchorVoxel); //make the piece removable by adding voxels above non-anchor voxels
-        selectPiece(); //returns the piece with the smallest sum of accessibility values
         setAnchorVoxel2(anchorVoxel, blocking, removablePiece); //sets the second anchor voxel from the now removable piece
+        //selectPiece(); //returns the piece with the smallest sum of accessibility values
     }
     
     void getShortestPath(Voxel start, Voxel destination){
-        System.out.println("Printing the path from source to destination...");
+        //System.out.println("Printing the path from source to destination...");
         currentShortestPath = new ArrayList<>();
         Voxel currentVoxel = destination;
         while (currentVoxel != start){
@@ -101,7 +101,7 @@ public class ShortestPath {
         Voxel seed = puzlock.seedVoxel;//stores the seed voxel
         String normalDir = seed.normalDirection;
         int noOfCandidates = path.size();
-        System.out.println("\nAmong "+noOfCandidates+" candidates. ");
+        System.out.print("Among "+noOfCandidates+" candidates. ");
         if (normalDir.equals("left")){
             System.out.print("Picking an anchor at the far right..."); //then we want to pick the voxel to the far right...
             int rightness = 0; //indicates the position of the rightest voxel, initialized as left i.e. 0 (left)
@@ -156,46 +156,6 @@ public class ShortestPath {
                 System.out.println("ERROR: Anchor voxel is null");
             }
         }
-    }
-    
-    /* takes in a set of voxels (in a path) and an anchor voxel to make 1 puzzle piece, removable by adding the voxels above it (excluding the anchor voxel)*/
-    static void makeRemovable(ArrayList<Voxel> path, Voxel anchor){
-        //make the key piece removable then expand the key piece (next method)...
-        //add all the voxels above the current set of voxels...
-        removablePiece = new ArrayList<>(); 
-        System.out.println("Making piece removable. Anchor voxel is at "+anchor.getCoordinates());
-        for (int j=0; j<path.size(); j++){ //for each voxel in the path
-            Voxel currentVoxel = path.get(j);
-            if ((!removablePiece.contains(currentVoxel)) ){ //if the current voxel is not already in the piece and it is not the anchor
-                removablePiece.add(currentVoxel); //add the current voxel
-                System.out.print(currentVoxel.getCoordinates()+"(in path); ");
-                for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
-                    Voxel above = puzlock.getUp(currentVoxel.x, k, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
-                    if ((above != null) && (!removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
-                        removablePiece.add(above); //add it to the set of candidate voxels (represented in figure 9(e))
-                        System.out.print(above.getCoordinates()+"(on top); ");
-                    }
-                }
-            }
-        }
-        //should debug print the removable piece here, remember to ensure that the anchor is not added...
-        ArrayList<Voxel> rPiece = (ArrayList)removablePiece.clone(); //clone the removable piece to avoid the concurrency issue
-        puzlock.removablePieces.add(rPiece); //store the removable piece
-        
-    }
-    
-    /* find the piece with the smallest sum of accessibility values */
-    static ArrayList<Voxel> selectPiece(){
-        puzlock.selectedPiece = new ArrayList<>();
-        double currentHighestSum = 1000000; //stores the current lowest sum of accessibility values, initialized to 1000000
-        for (ArrayList rPiece: puzlock.removablePieces){
-            double currentSum = puzlock.sumOfAccessVals(rPiece);
-            if (currentSum<currentHighestSum){ //if current sum of accessibility values is the lowest
-                currentHighestSum = currentSum; //set the current highest sum to the current sum
-                puzlock.selectedPiece = rPiece; //set the selected piece to the current piece
-            }
-        }
-        return puzlock.selectedPiece;
     }
     
     /* takes in the first anchor voxel, the blocking voxel, and the currently selected piece (lowest sum of accessibility values); sets the second anchor voxel */
@@ -277,6 +237,46 @@ public class ShortestPath {
         System.out.println("\n********************************************************************");
     }
     
+    
+    /* takes in a set of voxels (in a path) and an anchor voxel to make 1 puzzle piece, removable by adding the voxels above it (excluding the anchor voxel)*/
+    static void makeRemovable(ArrayList<Voxel> path, Voxel anchor){
+        //make the key piece removable then expand the key piece (next method)...
+        //add all the voxels above the current set of voxels...
+        removablePiece = new ArrayList<>(); 
+        System.out.println("Anchor voxel is at "+anchor.getCoordinates()+". Making piece removable...");
+        for (int j=0; j<path.size(); j++){ //for each voxel in the path
+            Voxel currentVoxel = path.get(j);
+            if ((!removablePiece.contains(currentVoxel)) ){ //if the current voxel is not already in the piece and it is not the anchor
+                removablePiece.add(currentVoxel); //add the current voxel
+                System.out.print(currentVoxel.getCoordinates()+"(in path); ");
+                for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
+                    Voxel above = puzlock.getUp(currentVoxel.x, k, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
+                    if ((above != null) && (!removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
+                        removablePiece.add(above); //add it to the set of candidate voxels (represented in figure 9(e))
+                        System.out.print(above.getCoordinates()+"(on top); ");
+                    }
+                }
+            }
+        }
+        //should debug print the removable piece here, remember to ensure that the anchor is not added...
+        ArrayList<Voxel> rPiece = (ArrayList)removablePiece.clone(); //clone the removable piece to avoid the concurrency issue
+        puzlock.removablePieces.add(rPiece); //store the removable piece
+        
+    }
+    
+    /* find the piece with the smallest sum of accessibility values 
+    static ArrayList<Voxel> selectPiece(){
+        puzlock.selectedPiece = new ArrayList<>();
+        double currentHighestSum = 1000000; //stores the current lowest sum of accessibility values, initialized to 1000000
+        for (ArrayList rPiece: puzlock.removablePieces){
+            double currentSum = puzlock.sumOfAccessVals(rPiece);
+            if (currentSum<currentHighestSum){ //if current sum of accessibility values is the lowest
+                currentHighestSum = currentSum; //set the current highest sum to the current sum
+                puzlock.selectedPiece = rPiece; //set the selected piece to the current piece
+            }
+        }
+        return puzlock.selectedPiece;
+    }*/
     
     void debugPrintVertices(ArrayList<Voxel> voxels){
         for (int i = 0; i < voxels.size(); i++) {
