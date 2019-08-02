@@ -184,8 +184,36 @@ public class Puzlock {
         System.out.println("");
         // subsequent passes - implicitly include neighbours from further afield
         int passes = 3; //# of passes (j from the eqn in the paper) i.e. = 3
+        ArrayList<Voxel> voxels2 = new ArrayList<>();
+        subsequentPasses(voxels, voxels2, passes);
+    }
+    
+    static void subsequentPasses(ArrayList<Voxel> oldvoxels, ArrayList<Voxel> newvoxels, int noOfPasses) {
         int q = 1; //stores the current index
-        for (int pass = 1; pass < passes; pass++) {
+        if (noOfPasses > 0) { //for the sake of recursion...
+        	for (int z=0; z<inputVoxelizedMesh.length; z++){
+                for (int y=0; y<inputVoxelizedMesh.length; y++){
+                    for (int x=0; x<inputVoxelizedMesh.length; x++){
+                        //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
+                        double newAccessValue; //stores the new accessibility value as per the subsequent passes
+                        int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
+                        double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
+                        double power = (double) Math.pow(weightFactor, noOfPasses); //alpha to the power of j in Song et al (2012) implementation
+                        double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
+                        Voxel v = voxels.get(index);
+                        Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //stores the new voxel which is based on the old voxel and has a new accessibility value
+                        newAccessValue = v.accessibilityValue + (power * sum);//A = B
+                        v.accessibilityValue = newAccessValue;
+                        System.out.println(q+") Voxel "+v+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
+                        q++;
+                    }
+                }
+            }
+            System.out.println("");
+            noOfPasses--; //decrease the number of passes by one
+            //subsequentPasses;//recurse with the new set of voxels being old and a new array being new
+        }
+        /*for (int pass = 1; pass < passes; pass++) {
             for (int z=0; z<inputVoxelizedMesh.length; z++){
                 for (int y=0; y<inputVoxelizedMesh.length; y++){
                     for (int x=0; x<inputVoxelizedMesh.length; x++){
@@ -196,6 +224,7 @@ public class Puzlock {
                         double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
                         double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
                         Voxel v = voxels.get(index);
+                        Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //stores the new voxel which is based on the old voxel and has a new accessibility value
                         newAccessValue = v.accessibilityValue + (power * sum);//A = B
                         v.accessibilityValue = newAccessValue;
                         System.out.println(q+") Voxel "+v+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
@@ -204,7 +233,7 @@ public class Puzlock {
                 }
             }
             System.out.println("");
-        }
+        }*/
     }
 
     //1.3. Ensure blocking and mobility
@@ -641,18 +670,6 @@ public class Puzlock {
         }if (backward != null && backward.value == 1){ //check backward
             neighbours++;
         }
-//        try{if (inputVoxelizedMesh[x-1][y][z] == 1){neighbours++;} //check left
-//        }catch(Exception e){}
-//        try{if (inputVoxelizedMesh[x+1][y][z] == 1){neighbours++;} //check right
-//        }catch(Exception e){}
-//        try{if (inputVoxelizedMesh[x][y-1][z] == 1){neighbours++;} //check up
-//        }catch(Exception e){}
-//        try{if (inputVoxelizedMesh[x][y+1][z] == 1){neighbours++;} //check down
-//        }catch(Exception e){}
-//        try{if (inputVoxelizedMesh[x][y][z+1] == 1){neighbours++;} //check forward
-//        }catch(Exception e){}
-//        try{if (inputVoxelizedMesh[x][y][z-1] == 1){neighbours++;} //check backward}
-//        }catch(Exception e){}
         return neighbours;
     }
     
