@@ -11,8 +11,8 @@ public class Puzlock2 {
     static int[][][] keyPiece = {
         {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
         {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
-        {{0, 0, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
-        {{1, 1, 1, 1},{0, 1, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
+        {{0, 0, 1, 0},{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0}}, 
+        {{1, 1, 1, 1},{0, 1, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
     };
     static ArrayList<Voxel> keyPieceVoxels = puzlock.initializeVoxelArray(keyPiece); //stores the key piece as an arraylist of voxels
     static int keyPieceSize; //the size of the array on the z a-axis
@@ -20,11 +20,22 @@ public class Puzlock2 {
     
     public static void main(String[] args){
         //2. Extracting other puzzle pieces...
-        keyPieceSize = keyPiece[0].length;
+        keyPieceSize = keyPiece[0].length; //set the size to be used
+        System.out.println("Key piece dimensions: "+keyPieceSize);
+        System.out.println("Key piece size: "+keyPieceVoxels.size());
         //2.0. Check movable direction(s)
-        checkRemovableDirections(keyPieceVoxels, keyPiece, keyPieceSize, removableDirections);
+        ArrayList<String> targetMovingDirection = checkRemovableDirections(keyPieceVoxels, keyPiece, keyPieceSize, removableDirections);        
+        if (targetMovingDirection.size() == 1){ //if the keyPiece has only one moving direction, it can be confirmed to be correct...
+            System.out.println("Target moving direction of key piece is "+targetMovingDirection.get(0));
+        }else{
+            System.out.println("Key piece has less or more than one target moving direction...");
+            for (String s: targetMovingDirection) {
+                System.out.println(s+" ");
+            }
+        }
         //2.1. Candidate seed voxels
-        candidateSeedVoxels();
+        ArrayList<Voxel> candidateSeeds = candidateSeedVoxels(keyPieceVoxels, keyPiece, keyPieceSize, targetMovingDirection);
+        puzlock.debugPrintVoxels(candidateSeeds);
         //2.2. Create an initial Pi+1
         createInitialPafter();
         //2.3. Ensure local interlocking
@@ -37,13 +48,232 @@ public class Puzlock2 {
     /* The procedure of extracting subsequent puzzle pieces, e.g., Pi+1 from Ri, also starts by picking a seed voxel, and then growing Pi+1 from it. 
     However, since there are additional requirements for local interlocking among Pi, Pi+1, and Ri+1, the blocking mechanics are more involved.  
     To facilitate our discussion, we denote d>i as the target moving direction of Pi. */
+    /* takes in a keyPiece arrayList of voxels and its 3D array, size and removable directions; checks which directions it is removable in*/
+    static ArrayList<String> checkRemovableDirections(ArrayList<Voxel> keyPiece, int[][][] vMesh, int vMeshSize, ArrayList<String> removableDirections){
+        ArrayList<String> movingDirections = new ArrayList<>();
+        //check left...
+        for (Voxel v: keyPiece){ //for each voxel in the piece...
+            if (v.value==1){ //if the voxel is set
+                //every left neighbour must either be 1 or null
+                Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (leftNeighbour==null){System.out.println("Left neighbour: "+leftNeighbour);}else{System.out.println("Left neighbour: "+leftNeighbour.value); }
+                if (leftNeighbour==null || leftNeighbour.value==1){
+                    if (!movingDirections.contains("left")){ //if left is not already a moving direction...
+                        movingDirections.add("left"); //add it
+                    }
+                }else{ //if leftNeighbour.value==0, it is not removable in this direction
+                    movingDirections.remove("left"); //remove it
+                    break;
+                }
+            }
+        }//check right...
+        for (Voxel v: keyPiece){ //for each voxel in the piece...
+            if (v.value==1){ //if the voxel is set
+                //every right neighbour must either be 1 or null
+                Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (rightNeighbour==null){ System.out.println("Right neighbour: "+rightNeighbour);}else{System.out.println("Right neighbour: "+rightNeighbour.value);}
+                if (rightNeighbour==null || rightNeighbour.value==1){
+                    if (!movingDirections.contains("right")){ //if right is not already a moving direction...
+                        movingDirections.add("right"); //add it
+                    }
+                }else{ //if rightNeighbour.value==0, it is not removable in this direction
+                    movingDirections.remove("right"); //remove it
+                    break;
+                }
+            }
+        }//check up...
+        for (Voxel v: keyPiece){ //for each voxel in the piece...
+            if (v.value==1){ //if the voxel is set
+                //every up neighbour must either be 1 or null
+                Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (upNeighbour==null){System.out.println("Up neighbour: "+upNeighbour);}else{System.out.println("Up neighbour: "+upNeighbour.value);}
+                if (upNeighbour==null || upNeighbour.value==1){
+                    if (!movingDirections.contains("up")){ //if up is not already a moving direction...
+                        movingDirections.add("up"); //add it
+                    }
+                }else{ //if upNeighbour.value==0, it is not removable in this direction
+                    movingDirections.remove("up"); //remove it
+                    break;
+                }
+            }
+        }//check down...
+        for (Voxel v: keyPiece){ //for each voxel in the piece...
+            if (v.value==1){ //if the voxel is set
+                //every down neighbour must either be 1 or null
+                Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (downNeighbour==null){System.out.println("Down neighbour: "+downNeighbour);}else{System.out.println("Down neighbour: "+downNeighbour.value); }
+                if (downNeighbour==null || downNeighbour.value==1){
+                    if (!movingDirections.contains("down")){ //if down is not already a moving direction...
+                        movingDirections.add("down"); //add it
+                    }
+                }else{ //if downNeighbour.value==0, it is not removable in this direction
+                    movingDirections.remove("down"); //remove it
+                    break;
+                }
+            }
+        }//check forward...
+        for (Voxel v: keyPiece){ //for each voxel in the piece...
+            if (v.value==1){ //if the voxel is set
+                //every forward neighbour must either be 1 or null
+                Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (forwardNeighbour==null){System.out.println("Forward neighbour: "+forwardNeighbour); }else{System.out.println("Forward neighbour: "+forwardNeighbour.value);}
+                if (forwardNeighbour==null || forwardNeighbour.value==1){
+                    if (!movingDirections.contains("forward")){ //if forward is not already a moving direction...
+                        movingDirections.add("forward"); //add it
+                    }
+                }else{ //if forwardNeighbour.value==0, it is not removable in this direction
+                    movingDirections.remove("forward"); //remove it
+                    break;
+                }
+            }
+        }//check backward...
+        for (Voxel v: keyPiece){ //for each voxel in the piece...
+            if (v.value==1){ //if the voxel is set
+                //every backward neighbour must either be 1 or null
+                Voxel backwardNeighbour = puzlock.getBackward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (backwardNeighbour==null){System.out.println("Backward neighbour: "+backwardNeighbour); }else{System.out.println("Backward neighbour: "+backwardNeighbour.value);}
+                if (backwardNeighbour==null || backwardNeighbour.value==1){
+                    if (!movingDirections.contains("backward")){ //if backward is not already a moving direction...
+                        movingDirections.add("backward"); //add it
+                    }
+                }else{ //if backwardNeighbour.value==0, it is not removable in this direction
+                    movingDirections.remove("backward"); //remove it
+                    break;
+                }
+            }
+        }
+        return movingDirections;
+    }
+
     //2.1. Candidate seed voxels
-    static void candidateSeedVoxels(){
+    static ArrayList<Voxel> candidateSeedVoxels(ArrayList<Voxel> keyPiece, int[][][] vMesh, int vMeshSize, ArrayList<String> removableDirections){
         /* • Since Pi+1 is blocked by Pi, but becomes mobilized as soon as Pi is removed, at least one of its voxel must reside next to Pi. 
         Since successive puzzle pieces should move in different directions (by Lemma 3 in Appendix), we use the contact between Pi and Pi+1 to define d>i+1 for blocking Pi+1 
         by the presence of Pi. Our strategy is to pick voxels (in Ri) next to Pi as candidate seeds, requiring them to contact P i in a direction perpendicular to d>i. 
         See Figure 11(b) for valid and invalid candidates in blue and violet, respectively. */
-
+        //1) gather all voxels next to the keyPiece in a set (Rs)...
+        ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
+        String removableDirection = removableDirections.get(0); //we must ensure that the neighbour is not in the opposite direction of the removable direction
+        for (Voxel v: keyPiece){ //for each voxel, get its neighbours
+            if (v.value==1){ //if the voxel is set
+                Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece); 
+                Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece); 
+                Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                Voxel backwardNeighbour = puzlock.getBackward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                if (removableDirection.equals("left")){ //do not check for right neighbours
+                    if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
+                        if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
+                        }
+                    }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
+                        if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
+                        }
+                    }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
+                        if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
+                        }
+                    }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
+                        if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
+                        }
+                    }
+                }else if (removableDirection.equals("right")){ //do not check for left neighbours
+                    if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
+                        if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
+                        }
+                    }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
+                        if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
+                        }
+                    }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
+                        if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
+                        }
+                    }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
+                        if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
+                        }
+                    }
+                }else if (removableDirection.equals("up")){ //do not check for down neighbours
+                    if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
+                        if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
+                        }
+                    }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
+                        if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
+                        }
+                    }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
+                        if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
+                        }
+                    }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
+                        if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
+                        }
+                    }
+                }else if (removableDirection.equals("down")){ //do not check for up neighbours
+                    if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
+                        if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
+                        }
+                    }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
+                        if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
+                        }
+                    }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
+                        if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
+                        }
+                    }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
+                        if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
+                        }
+                    }
+                }else if (removableDirection.equals("forward")){ //do not check for backward neighbours
+                    if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
+                        if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
+                        }
+                    }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
+                        if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
+                        }
+                    }if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
+                        if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
+                        }
+                    }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
+                        if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
+                        }
+                    }
+                }else if (removableDirection.equals("backward")){ //do not check for forwardward neighbours
+                    if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
+                        if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
+                        }
+                    }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
+                        if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
+                        }
+                    }if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
+                        if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
+                        }
+                    }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
+                        if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
+                        }
+                    }
+                }
+            }
+        }
+        return setOfNeighbours;
         /* • Since there may be too many valid candidates, trying them all is overly time consuming. 
         Hence, we compute the accessibility of voxels in Ri and reduce the number of candidates to ten by the following equally-weighted criteria: 
         (i) smaller accessibility value; and 
@@ -88,43 +318,6 @@ public class Puzlock2 {
         These are done in the same way as in Section 5.1. */
     }
     
-    /* takes in a keyPiece arrayList of voxels and its 3D array, size and removable directions; checks which directions it is removable in*/
-    static void checkRemovableDirections(ArrayList<Voxel> keyPiece, int[][][] vMesh, int vMeshSize, ArrayList<String> removableDirections){
-        //1) gather all voxels next to the keyPiece in a set (Rs)...
-        ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
-        for (Voxel v: keyPiece){ //for each voxel, get its neighbours
-            Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece); 
-            Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece); 
-            Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
-            Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
-            Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
-            Voxel backwardNeighbour = puzlock.getBackward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
-            if (leftNeighbour != null){ //if there is a left neighbour
-                if((!keyPiece.contains(leftNeighbour)) && (!setOfNeighbours.contains(leftNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
-                }
-            }if (rightNeighbour != null){ //if there is a right neighbour
-                if((!keyPiece.contains(rightNeighbour)) && (!setOfNeighbours.contains(rightNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
-                }
-            }if (upNeighbour != null){ //if there is an up neighbour
-                if((!keyPiece.contains(upNeighbour)) && (!setOfNeighbours.contains(upNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
-                }
-            }if (downNeighbour != null){ //if there is a down neighbour
-                if((!keyPiece.contains(downNeighbour)) && (!setOfNeighbours.contains(downNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
-                }
-            }if (forwardNeighbour != null){ //if there is a forward neighbour
-                if((!keyPiece.contains(forwardNeighbour)) && (!setOfNeighbours.contains(forwardNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
-                }
-            }if (backwardNeighbour != null){ //if there is a backward neighbour
-                if((!keyPiece.contains(backwardNeighbour)) && (!setOfNeighbours.contains(backwardNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
-                }
-            }
-        }
-    }
+    
 
 }

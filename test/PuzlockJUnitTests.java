@@ -10,20 +10,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author adam2
  */
 public class PuzlockJUnitTests {
-    TestExamples examples = new TestExamples();
-    Puzlock puzlock = new Puzlock();
-    
-    @Test
-    public void add() {
-        int input1 = 5;
-        int input2 = 4;
-        int actualResult = examples.add(5, 4);
-        int expectedResult = input1+input2;
-        assertEquals(expectedResult, actualResult);
-    }
-    
+    Puzlock puzlock = new Puzlock(); 
     //unit testing for every Puzlock method which generates results comparable with expectations...
-    
+  
     @Test
     public void expandKeyPiece() {
         //ArrayList<Voxel> expandKeyPiece(ArrayList piece)

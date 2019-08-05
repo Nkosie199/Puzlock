@@ -361,6 +361,7 @@ public class Puzlock {
     
     /* debug prints the voxels array */
     static void debugPrintVoxels(ArrayList<Voxel> voxels){
+        System.out.println("Debug printing voxels...");
         for (int i=0; i<voxels.size(); i++) {
             Voxel v = voxels.get(i);
             System.out.println(i+") "+v+" is at "+v.x+","+v.y+","+v.z);
@@ -402,9 +403,9 @@ public class Puzlock {
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
     static Voxel getLeft(int x, int y, int z, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> voxelArray){
         try{ //it will either be 0, 1 or null
-        	if (vMesh[z][y][x-1] == 1 | vMesh[z][y][x-1] == 0){
-        		int index = indexOfCoordinate(x-1, y, z, vMeshSize);
-        		//System.out.println("Left index: "+index);
+            if (vMesh[z][y][x-1] == 1 | vMesh[z][y][x-1] == 0){
+                int index = indexOfCoordinate(x-1, y, z, vMeshSize);
+                //System.out.println("Left index: "+index);
                 Voxel v = voxelArray.get(index);
                 int currentIndex = indexOfCoordinate(v.x, v.y, v.z, vMeshSize);
                 if (!(v.x+", "+v.y+", "+v.z).equals((x-1)+", "+y+", "+z)){
