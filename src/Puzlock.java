@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Nkosi Gumede
+ * this class implements 'Section 5.2: Extracting the Key Piece' of Song et al. (2012)
  */
 public class Puzlock {
     static Scanner sc;
@@ -43,10 +44,10 @@ public class Puzlock {
     public static void main(String[] args) throws IOException{
         //0. Setup...
         //0.1. Read the 3D grid
-//        inputVoxelizedMesh = io.readFileToInputGrid("inputGrid");
+        //inputVoxelizedMesh = io.readFileToInputGrid("inputGrid");
         inputVoxelizedMesh = io.readFileToInputGrid("4x4x4");
-        //inputVoxelizedMeshSize = computeMeshSize(inputVoxelizedMesh);
         inputVoxelizedMeshSize = inputVoxelizedMesh[0].length;
+        System.out.println("vMesh size: "+inputVoxelizedMeshSize);
         //0.2. Initialize the 1D array representing the 3D grid/array
         initializeVoxelArray(inputVoxelizedMesh); //initializes the voxels array and sets the value of top
 //        debugPrintVoxelizedMesh(inputVoxelizedMesh);
@@ -75,39 +76,15 @@ public class Puzlock {
         System.out.println("\nDebug printing output mesh and printing to file...");
         debugPrintVoxelizedMesh(outputVoxelizedMesh);
         io.printGridToFile(outputVoxelizedMesh, "keyPiece"); //should print the key piece to a file called keyPiece
-        //2. Extracting other puzzle pieces...
-        //2.1. Candidate seed voxels
-        //2.2. Create an initial Pi+1
-        //2.3. Ensure local interlocking
-        //2.4. Expand Pi+1 and Confirm it
+//        System.out.println("Checking removable directions...");
+//        checkRemovableDirections(outputVoxelizedMesh);
         System.out.println("\nCOMPLETE!");
 //        debugPrintOutput(keyPiece);
-    }
-    
-    /* find the piece with the smallest sum of accessibility values */
-    static ArrayList<Voxel> selectPiece(){
-        selectedPiece = new ArrayList<>();
-        double currentHighestSum = 1000000; //stores the current lowest sum of accessibility values, initialized to 1000000
-        for (ArrayList rPiece: removablePieces){
-            double currentSum = sumOfAccessVals(rPiece);
-            if (currentSum<currentHighestSum){ //if current sum of accessibility values is the lowest
-                currentHighestSum = currentSum; //set the current highest sum to the current sum
-                selectedPiece = rPiece; //set the selected piece to the current piece
-            }
-        }
-        return selectedPiece;
-    }
-    
-    static void debugPrintOutput(ArrayList<Voxel> keyPiece){
-        System.out.println("\nCOMPLETE! Debug printing "+keyPiece.size()+" voxels of the final puzzle piece...");
-        setOutputPieces(keyPiece, inputVoxelizedMeshSize); //represent a new puzzle piece in a 3D array
-        debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
-        System.out.println("-------------------------------------------------------------------------------------------");
     }
 
     //1. Extacting the key piece
     //1.1. Pick a seed voxel
-    /* takes in an input mesh and  */
+    /* takes in an input mesh and randomly picks a seed voxel from the set of exterior voxels */
     public static void pickSeedVoxel(int[][][] vMesh){
     	System.out.println("1.1. Picking a seed voxel...");
         //• Identify a set of exterior voxels that have exactly a pair of adjacent exterior faces (with one being on top). 
@@ -182,58 +159,12 @@ public class Puzlock {
             }
         }
         System.out.println("");
-        // subsequent passes - implicitly include neighbours from further afield
+        // subsequent passes - implicitly include neighbours from further afield...
         int passes = 3; //# of passes (j from the eqn in the paper) i.e. = 3
-        ArrayList<Voxel> voxels2 = new ArrayList<>();
-        subsequentPasses(voxels, voxels2, passes);
-    }
-    
-    static void subsequentPasses(ArrayList<Voxel> oldvoxels, ArrayList<Voxel> newvoxels, int noOfPasses) {
-        int q = 1; //stores the current index
-        if (noOfPasses > 0) { //for the sake of recursion...
-        	for (int z=0; z<inputVoxelizedMesh.length; z++){
-                for (int y=0; y<inputVoxelizedMesh.length; y++){
-                    for (int x=0; x<inputVoxelizedMesh.length; x++){
-                        //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
-                        double newAccessValue; //stores the new accessibility value as per the subsequent passes
-                        int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
-                        double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
-                        double power = (double) Math.pow(weightFactor, noOfPasses); //alpha to the power of j in Song et al (2012) implementation
-                        double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
-                        Voxel v = voxels.get(index);
-                        Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //stores the new voxel which is based on the old voxel and has a new accessibility value
-                        newAccessValue = v.accessibilityValue + (power * sum);//A = B
-                        v.accessibilityValue = newAccessValue;
-                        System.out.println(q+") Voxel "+v+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
-                        q++;
-                    }
-                }
-            }
-            System.out.println("");
-            noOfPasses--; //decrease the number of passes by one
-            //subsequentPasses;//recurse with the new set of voxels being old and a new array being new
-        }
-        /*for (int pass = 1; pass < passes; pass++) {
-            for (int z=0; z<inputVoxelizedMesh.length; z++){
-                for (int y=0; y<inputVoxelizedMesh.length; y++){
-                    for (int x=0; x<inputVoxelizedMesh.length; x++){
-                        //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
-                        double newAccessValue; //stores the new accessibility value as per the subsequent passes
-                        int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
-                        double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
-                        double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
-                        double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
-                        Voxel v = voxels.get(index);
-                        Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //stores the new voxel which is based on the old voxel and has a new accessibility value
-                        newAccessValue = v.accessibilityValue + (power * sum);//A = B
-                        v.accessibilityValue = newAccessValue;
-                        System.out.println(q+") Voxel "+v+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
-                        q++;
-                    }
-                }
-            }
-            System.out.println("");
-        }*/
+        ArrayList<Voxel> voxels2 = new ArrayList<>(); //create a new voxels arraylist to store the set of new voxels and corresponding access values
+        int q = 0; //stores the current index
+        int pass = 1; //stores the pass number, ranging from 1 to 3
+        subsequentPasses(voxels, voxels2, passes, pass, q); 
     }
 
     //1.3. Ensure blocking and mobility
@@ -259,8 +190,7 @@ public class Puzlock {
         }
         Collections.sort(accVals); //sorts the stores accessibility values
         maxAccVal = accVals.get(Nb2-1); //gets the last of the sorted array
-        //for each voxelpair
-        for (VoxelPair q: voxelPairs) {
+        for (VoxelPair q: voxelPairs) { //for each voxelpair...
             Double d = q.getVoxel2().accessibilityValue; //get the voxelpair's blockee's accessibility value
             //if a voxelpair's blockee has an accessibilty value less than or equal to the max of the sorted accessibility value, 
             //and it is not already in the set of accessible voxel pairs
@@ -272,15 +202,14 @@ public class Puzlock {
             }
         }
         System.out.println("Debug printing the sorted list of accessibility values, where max = "+maxAccVal+"...");
-        System.out.println("The seed voxel is at "+seedVoxel.getCoordinates());
         for (int i=0; i<Nb2; i++) { //for each accessible voxel pair...
             //debug print the sorted list of accessibility values and voxel pairs
             VoxelPair vp = accessibleVoxelPairs.get(i);
             Voxel blocking = vp.getVoxel1();
             Voxel blockee = vp.getVoxel2();
-            System.out.print(i+") Access value: "+vp.getVoxel1().accessibilityValue);
+            System.out.print(i+") Access value: "+blockee.accessibilityValue);
             System.out.println(", voxel pair: "+vp+", blockee is at "+blockee.getCoordinates()+", blocking is at "+blocking.getCoordinates()+" and normal direction is "+seedVoxel.normalDirection+"...");
-            System.out.println("Shortest path from "+seedVoxel.getCoordinates()+" (seed) to "+blockee.getCoordinates()+" (blockee)");
+            System.out.print("Shortest path from "+seedVoxel.getCoordinates()+" (seed) to "+blockee.getCoordinates()+" (blockee): ");
             ArrayList<Voxel> voxels2 = (ArrayList)voxels.clone(); //must clone the array to prevent the concurrency issue
             sp = new ShortestPath(voxels2, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
             //create new puzzle piece based on the removable piece and add it to the set of stored pieces in Puzlock...
@@ -348,66 +277,11 @@ public class Puzlock {
         //done by floodFill method this class...
         floodFill(keyPiece);
     }
-
-    //2. Extracting other puzzle pieces
-    /* The procedure of extracting subsequent puzzle pieces, e.g., Pi+1 from Ri, also starts by picking a seed voxel, and then growing Pi+1 from it. 
-    However, since there are additional requirements for local interlocking among Pi, Pi+1, and Ri+1, the blocking mechanics are more involved.  
-    To facilitate our discussion, we denote d>i as the target moving direction of Pi. */
-    //2.1. Candidate seed voxels
-    void candidateSeedVoxels(){
-        /* • Since Pi+1 is blocked by Pi, but becomes mobilized as soon as Pi is removed, at least one of its voxel must reside next to Pi. 
-        Since successive puzzle pieces should move in different directions (by Lemma 3 in Appendix), we use the contact between Pi and Pi+1 to define d>i+1 for blocking Pi+1 
-        by the presence of Pi. Our strategy is to pick voxels (in Ri) next to Pi as candidate seeds, requiring them to contact P i in a direction perpendicular to d>i. 
-        See Figure 11(b) for valid and invalid candidates in blue and violet, respectively. */
-
-        /* • Since there may be too many valid candidates, trying them all is overly time consuming. 
-        Hence, we compute the accessibility of voxels in Ri and reduce the number of candidates to ten by the following equally-weighted criteria: 
-        (i) smaller accessibility value; and 
-        (ii) shorter distance to the furthest-away voxel in Ri along d>i+1, see Figure 11(c) 
-        for examples: an initial Pi+1 formed by C2 will contain more voxels as compared to C1 because of a longer shortest path determined by step 2 below. 
-        Hence, the second criteria helps reduce the number of voxels that are required to form an initial Pi+1. 
-        Note that we attempt to use fewer voxels (in early steps) to construct an initial Pi+1 because this allows us to have more flexibility when expanding the puzzle piece in step 3. */
-    }
-
-    //2.2. Create an initial Pi+1
-    void createInitialPafter(){
-        /* • After step 1, we have a set of candidate seeds, each associated with a d> i+1. Our next step is to pick one of them by examining its cost of making Pi+1 removable in d>i+1: 
-        (i) from each candidate, we identify all voxels in Ri along d>i+1 (see the orange voxels in Figure 11(d)) 
-        since these voxels must be taken to Pi+1 to make the candidate removable along d>i+1; 
-        (ii) we determine a shortest path to connect the candidate to these identified voxels (Figure 11(e)), and 
-        (iii) we locate also any additional voxel required to mobilize the shortest path towards d>i+1 (Figure 11(f)). 
-        To choose among the candidates, we sum the accessibility of all the voxels involved in each candidate path (blue voxels in Figure 11(f)), 
-        and pick the one with the smallest sum for forming the initial Pi+1. */
-    }
-
-    //2.3. Ensure local interlocking
-    void ensureLocalInterlocking(){
-        /* • Until now, Pi+1 is modeled with appropriate blocking for direction d>i+1 (Figure 11(f)), where its mobility towards d>i+1 depends on the presence of Pi alone. 
-        Next, we further have to ensure appropriate blocking for the other five directions for achieving local interlocking in [Pi, Pi+1, Ri+1]: 
-        (i) Pi+1 is immobilized in the presence of Ri+1 and Pi, and (ii) it cannot co-move with Pi. 
-        For this, we perform a mobility check for each of the five directions to see if Pi+1 is blocked or not. 
-        Note that the mobility check of Pi+1 along any direction d> is done by checking if any voxel from Pi or Ri+1 contacts Pi+1 along d>. 
-        If this is true, Pi+1 is immobilized to move along d>. 
-        Only if Pi+1 is movable, we apply the first two strategies in Section 5.1 (step 3) to extend Pi+1 to some blockee voxels for achieving appropriate blocking in related direction(s). */
-
-
-        /* • For requirement (i) above, we perform the mobility check on Pi+1 in the presence of both Pi and Ri+1. 
-        However, the tricky part for direction d>i is that since Pi+1 should not be co-movable with Pi, 
-        we have to perform the mobility check on Pi+1 in the absence of Pi for this particular direction. 
-        Lastly, note further that the anchor voxel strategy in Section 5.1 can also be applied here. 
-        See Figure 10 (left) for the local interlocking established in an 8-piece 4^3 CUBE. */
-    }
-
-    //2.4. Expand Pi+1 and Confirm it
-    void expandPafterandConfirm(){
-        /* • After the above steps, Pi+1 can fulfill the local interlocking requirement, but yet we have to expand it to m voxels and check whether Ri+1 is simply connected or not. 
-        These are done in the same way as in Section 5.1. */
-    }
     
     /* Takes in a 3D array and stores it as voxels in a 1D voxel arraylist */
     static ArrayList<Voxel> initializeVoxelArray(int[][][] vMesh){
     	voxels = new ArrayList<>();
-    	int iterator = 0;
+    	//int iterator = 0;
         for (int z=0; z<vMesh.length; z++){
             for (int y=0; y<vMesh.length; y++){
                 for (int x=0; x<vMesh.length; x++){
@@ -418,12 +292,12 @@ public class Puzlock {
                         Voxel v = new Voxel(x,y,z,1);
                         //System.out.println(iterator+") "+1+" @ "+x+","+y+","+z);
                         voxels.add(v);
-                        iterator++;
+                        //iterator++;
                     }else if (vMesh[z][y][x] == 0){//only if index == 0
                         Voxel v = new Voxel(x,y,z,0);
                         //System.out.println(iterator+") "+0+" @ "+x+","+y+","+z);
                         voxels.add(v);
-                        iterator++;
+                        //iterator++;
                     }
                 }
             }
@@ -458,7 +332,7 @@ public class Puzlock {
                 }
                 System.out.println("");
             }
-            System.out.println("---");
+            System.out.println("---z="+z+"---");
         }
     }
     
@@ -681,7 +555,7 @@ public class Puzlock {
                 Voxel v = vs.get(index);
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
-                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to left neighbour @ "+v.x+","+v.y+","+v.z);
+                //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to left neighbour @ "+v.x+","+v.y+","+v.z);
             }
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
@@ -691,7 +565,7 @@ public class Puzlock {
                 Voxel v = vs.get(index);
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
-                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to right neighbour @ "+v.x+","+v.y+","+v.z);
+                //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to right neighbour @ "+v.x+","+v.y+","+v.z);
         	}
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
@@ -701,7 +575,7 @@ public class Puzlock {
                 Voxel v = vs.get(index);
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
-                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to up neighbour @ "+v.x+","+v.y+","+v.z);
+                //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to up neighbour @ "+v.x+","+v.y+","+v.z);
         	}
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
@@ -711,7 +585,7 @@ public class Puzlock {
                 Voxel v = vs.get(index);
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
-                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to down neighbour @ "+v.x+","+v.y+","+v.z);
+                //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to down neighbour @ "+v.x+","+v.y+","+v.z);
         	}
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
@@ -721,7 +595,7 @@ public class Puzlock {
                 Voxel v = vs.get(index);
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
-                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to forward neighbour @ "+v.x+","+v.y+","+v.z);
+                //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to forward neighbour @ "+v.x+","+v.y+","+v.z);
         	}
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
@@ -731,7 +605,7 @@ public class Puzlock {
                 Voxel v = vs.get(index);
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
-                System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to backward neighbour @ "+v.x+","+v.y+","+v.z);
+                //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to backward neighbour @ "+v.x+","+v.y+","+v.z);
         	}
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
@@ -746,8 +620,7 @@ public class Puzlock {
         //first determine the direction in which to traverse though the graph to find the nearest pairs of voxels...
         Voxel currentVoxel = seedVoxel;  
         String normalDir = seedVoxel.normalDirection;
-        System.out.println("Seed voxel randomly chosen from set is: "+seedVoxel+" at co-ordinates "+seedVoxel.x+", "+seedVoxel.y+", "+seedVoxel.z);
-        System.out.println("Seed voxel normal direction = "+normalDir);
+        System.out.println("Seed voxel randomly chosen from set is: "+seedVoxel+" at co-ordinates "+seedVoxel.x+", "+seedVoxel.y+", "+seedVoxel.z+"; normal direction = "+normalDir);
         breadthFirstTraversal2(currentVoxel, normalDir); //traverse thought its neighbours
     }
     
@@ -948,11 +821,17 @@ public class Puzlock {
     
     static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels, ArrayList<PuzzlePiece> pieces, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> vs, ArrayList<Voxel> candidates, int beta){
         //perhaps we will need a set of neighbours?
+        Voxel anchor = null; //store these variables here so they can be used for the recursive case...
+        Voxel anchor2 = null;
+        Voxel blockingV = null;
+        Voxel blockeeV = null;
         for (PuzzlePiece p: pieces) { //find piece p...
 //            System.out.println("Selected piece is: "); debugPrintVoxels(addedVoxels); System.out.println(". Current piece is: "); debugPrintVoxels(p.piece);
             if (p.piece.equals(addedVoxels)){ //once we have retrieved our selected piece from the set of puzzle pieces generated and made removable
-                Voxel anchor = p.anchorVoxel;
-                Voxel anchor2 = p.anchorVoxel2;
+                anchor = p.anchorVoxel;
+                anchor2 = p.anchorVoxel2;
+                blockingV = p.blocking;
+                blockeeV = p.blockee;
                 System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates());
                 for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
                     Voxel currentVoxel = addedVoxels.get(i);
@@ -984,7 +863,18 @@ public class Puzlock {
             }
         }
         ArrayList<Voxel> addedVs = addVoxels2(addedVoxels, vMesh, vMeshSize, vs, candidates, beta); //add the voxels above the added neighbour
-        return addedVs;
+        if (addedVs.size() >= m){ //if size is suitable
+            return addedVs; //return
+        }else{
+            System.out.println("Piece is still to small at size "+addedVs.size()+", repeating the process of expansion");
+            if ((anchor != null) && (anchor2 != null) && (blockingV != null) && (blockeeV != null)){
+                puzzlePieces.add(new PuzzlePiece(addedVoxels, anchor, anchor2, blockingV, blockeeV)); //add this updated piece
+            }else{
+                System.out.println("ERROR: some variables in addVoxels have not been initialized.");
+            }
+            return expandKeyPiece(addedVs); //repeat the process of expansion
+        }
+        
     }
    
     /* an implementation of section 1.4 point 2 & 3: Expands the key piece by adding neighbouring voxels by probability value pi2. Returns new set of added nieghbours */
@@ -1048,43 +938,6 @@ public class Puzlock {
    
     /* Flooding algorithm which helps compleete section 1.5) Confirming the key piece */
     static void floodFill(ArrayList<Voxel> keyPiece) throws FileNotFoundException, UnsupportedEncodingException{
-        /*
-    	//1) gather all voxels next to the keyPiece in a set (Rs)...
-        ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels next to the key piece
-        for (Voxel v: keyPiece){ //for each voxel, get its neighbours
-            Voxel leftNeighbour = getLeft(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
-            Voxel rightNeighbour = getRight(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels); 
-            Voxel upNeighbour = getUp(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-            Voxel downNeighbour = getDown(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-            Voxel forwardNeighbour = getForward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-            Voxel backwardNeighbour = getBackward(v.x, v.y, v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-            if (leftNeighbour != null){ //if there is a left neighbour
-                if((!keyPiece.contains(leftNeighbour)) && (!setOfNeighbours.contains(leftNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
-                }
-            }if (rightNeighbour != null){ //if there is a right neighbour
-                if((!keyPiece.contains(rightNeighbour)) && (!setOfNeighbours.contains(rightNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
-                }
-            }if (upNeighbour != null){ //if there is an up neighbour
-                if((!keyPiece.contains(upNeighbour)) && (!setOfNeighbours.contains(upNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
-                }
-            }if (downNeighbour != null){ //if there is a down neighbour
-                if((!keyPiece.contains(downNeighbour)) && (!setOfNeighbours.contains(downNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
-                }
-            }if (forwardNeighbour != null){ //if there is a forward neighbour
-                if((!keyPiece.contains(forwardNeighbour)) && (!setOfNeighbours.contains(forwardNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
-                }
-            }if (backwardNeighbour != null){ //if there is a backward neighbour
-                if((!keyPiece.contains(backwardNeighbour)) && (!setOfNeighbours.contains(backwardNeighbour))){ //if neighbour is not already in keyPiece nor the set of neighbours
-                    setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
-                }
-            }
-        }
-        */
         //change of strategy: the set of neighbours will now be the remaining volume...
     	ArrayList<Voxel> setOfNeighbours = new ArrayList<>(); //stores all voxels in the remaining volume
     	for (Voxel v: voxels) { //for each and every voxel
@@ -1181,4 +1034,55 @@ public class Puzlock {
         }
     }
     
+    /* find the piece with the smallest sum of accessibility values */
+    static ArrayList<Voxel> selectPiece(){
+        selectedPiece = new ArrayList<>();
+        double currentHighestSum = 1000000; //stores the current lowest sum of accessibility values, initialized to 1000000
+        for (ArrayList rPiece: removablePieces){
+            double currentSum = sumOfAccessVals(rPiece);
+            if (currentSum<currentHighestSum){ //if current sum of accessibility values is the lowest
+                currentHighestSum = currentSum; //set the current highest sum to the current sum
+                selectedPiece = rPiece; //set the selected piece to the current piece
+            }
+        }
+        return selectedPiece;
+    }
+    
+    static void debugPrintOutput(ArrayList<Voxel> keyPiece){
+        System.out.println("\nCOMPLETE! Debug printing "+keyPiece.size()+" voxels of the final puzzle piece...");
+        setOutputPieces(keyPiece, inputVoxelizedMeshSize); //represent a new puzzle piece in a 3D array
+        debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
+        System.out.println("-------------------------------------------------------------------------------------------");
+    }
+    
+    static void subsequentPasses(ArrayList<Voxel> oldvoxels, ArrayList<Voxel> newvoxels, int noOfPasses, int pass, int q) {
+        if (pass <= noOfPasses) { //for the sake of recursion...
+            for (int z=0; z<inputVoxelizedMeshSize; z++){
+                for (int y=0; y<inputVoxelizedMeshSize; y++){
+                    for (int x=0; x<inputVoxelizedMeshSize; x++){
+                        if (inputVoxelizedMesh[z][y][x] == 1){
+                            //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
+                            double newAccessValue; //stores the new accessibility value as per the subsequent passes
+                            int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
+                            double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
+                            double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
+                            double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
+                            Voxel v = oldvoxels.get(index);
+                            newAccessValue = v.accessibilityValue + (power * sum); //A = B. Calculates the new accessibility value
+                            Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //the new voxel which is based on the old voxel and has a new accessibility value                    
+                            v2.accessibilityValue = newAccessValue;
+                            newvoxels.add(v2); //add v2 to newvoxels to store it
+                            System.out.println(q+") Voxel "+v2+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
+                            q++;
+                        }
+                    }
+                }
+            }
+            System.out.println("");
+            pass++; //increase the pass by one
+            ArrayList<Voxel> voxels2 = new ArrayList<>(); //create a new voxels arraylist to store the set of new voxels and corresponding access values
+            subsequentPasses(newvoxels, voxels2, noOfPasses, pass, q); //recurse with the new set of voxels being old and a new array being new
+        }
+        voxels = oldvoxels; //now we can replace the global set of voxels with the new set of voxels
+    }
 }

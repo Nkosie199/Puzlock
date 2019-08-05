@@ -12,8 +12,8 @@ public class ShortestPath {
     int maxDistance = 1000000; //represents the maximum distance (which is set upon initialization) i.e. infinity. Must be > total number of voxels
     static ArrayList<Voxel> removablePiece; //stores piece given by the shortest path which have been made removable by adding the voxels above them
     static ArrayList currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
-    static Voxel anchorVoxel; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
-    static Voxel anchorVoxel2; //stores the second anchor voxel as per section 4
+    static Voxel anchorVoxel = null; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
+    static Voxel anchorVoxel2 = null; //stores the second anchor voxel as per section 4
     
     /* takes in the voxel array, source (seed), destination (blockee) and the blocking voxel*/
     public ShortestPath(ArrayList<Voxel> voxels, Voxel source, Voxel destination, Voxel blocking){
