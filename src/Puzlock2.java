@@ -43,11 +43,13 @@ public class Puzlock2 {
         }
         //2.1. Candidate seed voxels
         ArrayList<Voxel> candidateSeeds = candidateSeedVoxels(keyPieceVoxels, keyPiece, keyPieceSize, targetMovingDirection);
+        System.out.println("Debug printing the set of candidate seeds...");
         puzlock.debugPrintVoxels(candidateSeeds);
         //now we have to shortlist the set of candidates to a maximum of 10...
         ArrayList<Voxel> shortlistedSeeds = shortlistCandidates(remainingPiece, keyPieceSize, remainingPieceVoxels, candidateSeeds, removableDirections);
         //2.2. Create an initial Pi+1
-        createInitialPafter();
+        //createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, String removableDirection)
+        createInitialPafter(shortlistedSeeds, remainingPiece, keyPieceSize, remainingPieceVoxels, removableDirections.get(0));
         //2.3. Ensure local interlocking
         ensureLocalInterlocking();
         //2.4. Expand Pi+1 and Confirm it
@@ -319,8 +321,9 @@ public class Puzlock2 {
     }
     
     static ArrayList<Voxel> shortlistCandidates(int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, ArrayList<Voxel> candidateSeedVoxels, ArrayList<String> removableDirections){
+        System.out.println("Shortlisting candidates...");
         ArrayList<Voxel> shortlist = new ArrayList<>();
-        if (candidateSeedVoxels.size() > 1){ //if the set of candidates is greater than 10
+        if (candidateSeedVoxels.size() > 10){ //if the set of candidates is greater than 10
             //i)order candidates in terms of accessibility value: smallest to largest...
             remainingVoxels = puzlock.computeVoxelAccessibility(remainingMesh, remainingMeshSize, remainingVoxels); //the candidate seeds are in the remaining volume
             ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
@@ -329,6 +332,7 @@ public class Puzlock2 {
                     if (v.getCoordinates().equals(v2.getCoordinates())){ //if the voxels correspond
                         System.out.println("adding accessibility value "+v.accessibilityValue+" at "+v.x+","+v.y+","+v.z);
                         accVals.add(v.accessibilityValue); //add its accessibility value
+                        v2.accessibilityValue = v.accessibilityValue; //make sure the accessibility values of the candidate set of voxels are set
                     }
                 }
             }
@@ -424,7 +428,41 @@ public class Puzlock2 {
                 System.out.print(i+" ");
             }System.out.println("");
             //get the first voxel which appears in both lists iteratavely until we have 10...
-            
+            ArrayList<Integer> rankings = new ArrayList<>();
+            //collect voxels according to their distance and accessibility value by ranking them accordingly...
+            for (int j = 0; j < candidateSeedVoxels.size(); j++) { //for each candidate seed voxel...
+                Voxel currentVoxel = candidateSeedVoxels.get(j);
+                for (int k = 0; k < distances.size(); k++) {
+                    System.out.println("Current voxel distance vs distance array: "+currentVoxel.remainingVolumeDistance+" vs. "+distances.get(k));
+                    if (currentVoxel.remainingVolumeDistance == distances.get(k)){
+                        currentVoxel.shortlistRank = k; //set the rank according to distance
+                        break; //move onto the next candidate
+                    }
+                }
+                for (int l = 0; l < accVals.size(); l++) {
+                    System.out.println("Current voxel accessibility vs accessibility array: "+currentVoxel.accessibilityValue+" vs. "+accVals.get(l));
+                    if (currentVoxel.accessibilityValue == accVals.get(l)){
+                        currentVoxel.shortlistRank =+ l; //increment the rank according to current ranking
+                        rankings.add(currentVoxel.shortlistRank); //store the ranking
+                        break; //move onto the next candidate
+                    }
+                }
+            }
+            Collections.sort(rankings); //sort the list of rankings from smallest to largest
+            System.out.println("Debug printing the rankings of voxels...");
+            for (Integer i: rankings) {
+                System.out.print(i+" ");
+            }System.out.println("");
+            for (int i = 0; i < rankings.size(); i++) {
+                for (int j = 0; j < candidateSeedVoxels.size(); j++) {
+                    Voxel cv = candidateSeedVoxels.get(j);
+                    if ((cv.shortlistRank==rankings.get(i)) && (shortlist.size()<10)){ //if we match the lowest ranking to a voxel; and the shortlist consists of less than 10 voxels
+                        shortlist.add(candidateSeedVoxels.remove(j)); //add to the shortlist, and remove from the candidate set
+                        System.out.println("Added shortlisted voxel @ "+cv.getCoordinates()+" with ranking "+cv.shortlistRank);
+                        break; //move onto the next ranking
+                    }
+                }
+            }
         }else{
             shortlist = candidateSeedVoxels;
         }
@@ -432,14 +470,26 @@ public class Puzlock2 {
     }
 
     //2.2. Create an initial Pi+1
-    static void createInitialPafter(){
-        /* • After step 1, we have a set of candidate seeds, each associated with a d> i+1. Our next step is to pick one of them by examining its cost of making Pi+1 removable in d>i+1: 
+    static void createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, String removableDirection){
+        /* • After step 1, we have a set of candidate seeds, each associated with a d> i+1. 
+        Our next step is to pick one of them by examining its cost of making Pi+1 removable in d>i+1: 
         (i) from each candidate, we identify all voxels in Ri along d>i+1 (see the orange voxels in Figure 11(d)) 
-        since these voxels must be taken to Pi+1 to make the candidate removable along d>i+1; 
-        (ii) we determine a shortest path to connect the candidate to these identified voxels (Figure 11(e)), and 
+        since these voxels must be taken to Pi+1 to make the candidate removable along d>i+1;
+        //for each voxel we will generate an associated cost, we will proceed voxel with the smallest voxel...*/
+        for (Voxel v: shortlist) {
+            
+        }
+        
+        /*(ii) we determine a shortest path to connect the candidate to these identified voxels (Figure 11(e)), and 
         (iii) we locate also any additional voxel required to mobilize the shortest path towards d>i+1 (Figure 11(f)). 
         To choose among the candidates, we sum the accessibility of all the voxels involved in each candidate path (blue voxels in Figure 11(f)), 
         and pick the one with the smallest sum for forming the initial Pi+1. */
+    }
+    
+    static int voxelsAlongDirection(Voxel currentVoxel, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, String removableDirection){
+        
+        
+        return -1;
     }
 
     //2.3. Ensure local interlocking
@@ -465,7 +515,5 @@ public class Puzlock2 {
         /* • After the above steps, Pi+1 can fulfill the local interlocking requirement, but yet we have to expand it to m voxels and check whether Ri+1 is simply connected or not. 
         These are done in the same way as in Section 5.1. */
     }
-    
-    
 
 }
