@@ -1,5 +1,5 @@
-
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * @author nkosi gumede
@@ -14,7 +14,14 @@ public class Puzlock2 {
         {{0, 0, 1, 0},{0, 0, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0}}, 
         {{1, 1, 1, 1},{0, 1, 0, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
     };
+    static int[][][] remainingPiece = {
+        {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+        {{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+        {{1, 1, 0, 1},{1, 1, 1, 0},{1, 1, 1, 1},{1, 1, 1, 1}}, 
+        {{0, 0, 0, 0},{1, 0, 1, 0},{1, 1, 1, 1},{1, 1, 1, 1}}
+    };
     static ArrayList<Voxel> keyPieceVoxels = puzlock.initializeVoxelArray(keyPiece); //stores the key piece as an arraylist of voxels
+    static ArrayList<Voxel> remainingPieceVoxels = puzlock.initializeVoxelArray(remainingPiece); //stores the key piece as an arraylist of voxels
     static int keyPieceSize; //the size of the array on the z a-axis
     static ArrayList<String> removableDirections = new ArrayList<>(); //stores the directions in which the key piece is removable
     
@@ -23,6 +30,7 @@ public class Puzlock2 {
         keyPieceSize = keyPiece[0].length; //set the size to be used
         System.out.println("Key piece dimensions: "+keyPieceSize);
         System.out.println("Key piece size: "+keyPieceVoxels.size());
+        System.out.println("Mesh size: "+keyPiece.length);
         //2.0. Check movable direction(s)
         ArrayList<String> targetMovingDirection = checkRemovableDirections(keyPieceVoxels, keyPiece, keyPieceSize, removableDirections);        
         if (targetMovingDirection.size() == 1){ //if the keyPiece has only one moving direction, it can be confirmed to be correct...
@@ -36,6 +44,8 @@ public class Puzlock2 {
         //2.1. Candidate seed voxels
         ArrayList<Voxel> candidateSeeds = candidateSeedVoxels(keyPieceVoxels, keyPiece, keyPieceSize, targetMovingDirection);
         puzlock.debugPrintVoxels(candidateSeeds);
+        //now we have to shortlist the set of candidates to a maximum of 10...
+        ArrayList<Voxel> shortlistedSeeds = shortlistCandidates(remainingPiece, keyPieceSize, remainingPieceVoxels, candidateSeeds, removableDirections);
         //2.2. Create an initial Pi+1
         createInitialPafter();
         //2.3. Ensure local interlocking
@@ -165,108 +175,132 @@ public class Puzlock2 {
                 if (removableDirection.equals("left")){ //do not check for right neighbours
                     if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
                         if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            upNeighbour.removableDirection = "down"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
                         }
                     }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
                         if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            downNeighbour.removableDirection = "up"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
                         }
                     }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
                         if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            forwardNeighbour.removableDirection = "backward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
                         }
                     }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
                         if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            backwardNeighbour.removableDirection = "forward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
                         }
                     }
                 }else if (removableDirection.equals("right")){ //do not check for left neighbours
                     if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
                         if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            upNeighbour.removableDirection = "down"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
                         }
                     }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
                         if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            downNeighbour.removableDirection = "up"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
                         }
                     }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
                         if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            forwardNeighbour.removableDirection = "backward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
                         }
                     }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
                         if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            backwardNeighbour.removableDirection = "forward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
                         }
                     }
                 }else if (removableDirection.equals("up")){ //do not check for down neighbours
                     if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
                         if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            leftNeighbour.removableDirection = "right"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
                         }
                     }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
                         if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            rightNeighbour.removableDirection = "left"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
                         }
                     }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
                         if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            forwardNeighbour.removableDirection = "backward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
                         }
                     }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
                         if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            backwardNeighbour.removableDirection = "forward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
                         }
                     }
                 }else if (removableDirection.equals("down")){ //do not check for up neighbours
                     if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
                         if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            leftNeighbour.removableDirection = "right"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
                         }
                     }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
                         if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            rightNeighbour.removableDirection = "left"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
                         }
                     }if (forwardNeighbour!=null && forwardNeighbour.value == 0){ //if there is a forward neighbour
                         if(!setOfNeighbours.contains(forwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            forwardNeighbour.removableDirection = "backward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(forwardNeighbour); //add it to the set of neighbours
                         }
                     }if (backwardNeighbour!=null && backwardNeighbour.value == 0){ //if there is a backward neighbour
                         if(!setOfNeighbours.contains(backwardNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            backwardNeighbour.removableDirection = "forward"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(backwardNeighbour); //add it to the set of neighbours
                         }
                     }
                 }else if (removableDirection.equals("forward")){ //do not check for backward neighbours
                     if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
                         if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            leftNeighbour.removableDirection = "right"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
                         }
                     }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
                         if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            rightNeighbour.removableDirection = "left"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
                         }
                     }if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
                         if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            upNeighbour.removableDirection = "down"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
                         }
                     }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
                         if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            downNeighbour.removableDirection = "up"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
                         }
                     }
                 }else if (removableDirection.equals("backward")){ //do not check for forwardward neighbours
                     if (leftNeighbour!=null && leftNeighbour.value == 0){ //if there is a left neighbour
                         if(!setOfNeighbours.contains(leftNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            leftNeighbour.removableDirection = "right"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(leftNeighbour); //add it to the set of neighbours
                         }
                     }if (rightNeighbour!=null && rightNeighbour.value == 0){ //if there is a right neighbour
                         if(!setOfNeighbours.contains(rightNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            rightNeighbour.removableDirection = "left"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(rightNeighbour); //add it to the set of neighbours
                         }
                     }if (upNeighbour!=null && upNeighbour.value == 0){ //if there is an up neighbour
                         if(!setOfNeighbours.contains(upNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            upNeighbour.removableDirection = "down"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(upNeighbour); //add it to the set of neighbours
                         }
                     }if (downNeighbour!=null && downNeighbour.value == 0){ //if there is a down neighbour
                         if(!setOfNeighbours.contains(downNeighbour)){ //if neighbour is not already in keyPiece nor the set of neighbours
+                            downNeighbour.removableDirection = "up"; //the removable direction is opposite to where the neighbour is
                             setOfNeighbours.add(downNeighbour); //add it to the set of neighbours
                         }
                     }
@@ -281,6 +315,120 @@ public class Puzlock2 {
         for examples: an initial Pi+1 formed by C2 will contain more voxels as compared to C1 because of a longer shortest path determined by step 2 below. 
         Hence, the second criteria helps reduce the number of voxels that are required to form an initial Pi+1. 
         Note that we attempt to use fewer voxels (in early steps) to construct an initial Pi+1 because this allows us to have more flexibility when expanding the puzzle piece in step 3. */
+        //done in shortlistCandidates method...
+    }
+    
+    static ArrayList<Voxel> shortlistCandidates(int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, ArrayList<Voxel> candidateSeedVoxels, ArrayList<String> removableDirections){
+        ArrayList<Voxel> shortlist = new ArrayList<>();
+        if (candidateSeedVoxels.size() > 1){ //if the set of candidates is greater than 10
+            //i)order candidates in terms of accessibility value: smallest to largest...
+            remainingVoxels = puzlock.computeVoxelAccessibility(remainingMesh, remainingMeshSize, remainingVoxels); //the candidate seeds are in the remaining volume
+            ArrayList<Double> accVals = new ArrayList(); //stores the accessibility values
+            for (Voxel v: remainingVoxels) {
+                for (Voxel v2: candidateSeedVoxels) {
+                    if (v.getCoordinates().equals(v2.getCoordinates())){ //if the voxels correspond
+                        System.out.println("adding accessibility value "+v.accessibilityValue+" at "+v.x+","+v.y+","+v.z);
+                        accVals.add(v.accessibilityValue); //add its accessibility value
+                    }
+                }
+            }
+            Collections.sort(accVals); //sorts the stored accessibility values from smallest to largest
+            System.out.println("Debug printing the accessibility values...");
+            for (Double d: accVals) {
+                System.out.print(d+" ");
+            }System.out.println("");
+            //ii)order ordered set of candidates in terms of shortest distance to the furthest-away voxel in the remaining volume...
+            ArrayList<Integer> distances = new ArrayList<>(); //store the voxel distances (from the remaining volume) furthest away from the current voxel according to its blocking direction...
+            for (Voxel v: candidateSeedVoxels){ //for each voxel in the set of candidates
+                //get its blocking direction
+                String blockingDirection = v.removableDirection;
+                if (blockingDirection.equals("left")){
+                    //go left along the remaining volume, incrementing the distance to the furthest-away voxel...
+                    Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                    int currentDistance = 1; //the immediate neighbour has a distance of 1
+                    while (leftNeighbour!=null){
+                        if (leftNeighbour.value==1){ //if voxel is set
+                            v.remainingVolumeDistance = currentDistance; //set the distance to the current distance
+                        }
+                        leftNeighbour = puzlock.getLeft(leftNeighbour.x, leftNeighbour.y, leftNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the left neighbour
+                        currentDistance++; //increment the distance
+                    }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
+                    distances.add(v.remainingVolumeDistance);
+                }else if (blockingDirection.equals("right")){
+                    //go right along the remaining volume, incrementing the distance to the furthest-away voxel...
+                    Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                    int currentDistance = 1; //the immediate neighbour has a distance of 1
+                    while (rightNeighbour!=null){
+                        if (rightNeighbour.value==1){ //if voxel is set
+                            v.remainingVolumeDistance = currentDistance; //set the distance to the current distance
+                        }
+                        rightNeighbour = puzlock.getRight(rightNeighbour.x, rightNeighbour.y, rightNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the right neighbour
+                        currentDistance++; //increment the distance
+                    }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
+                    distances.add(v.remainingVolumeDistance);
+                }else if (blockingDirection.equals("up")){
+                    //go up along the remaining volume, incrementing the distance to the furthest-away voxel...
+                    Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                    int currentDistance = 1; //the immediate neighbour has a distance of 1
+                    while (upNeighbour!=null){
+                        if (upNeighbour.value==1){ //if voxel is set
+                            v.remainingVolumeDistance = currentDistance; //set the distance to the current distance
+                        }
+                        upNeighbour = puzlock.getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the up neighbour
+                        currentDistance++; //increment the distance
+                    }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
+                    distances.add(v.remainingVolumeDistance);
+                }else if (blockingDirection.equals("down")){
+                    //go down along the remaining volume, incrementing the distance to the furthest-away voxel...
+                    Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                    int currentDistance = 1; //the immediate neighbour has a distance of 1
+                    while (downNeighbour!=null){
+                        if (downNeighbour.value==1){ //if voxel is set
+                            v.remainingVolumeDistance = currentDistance; //set the distance to the current distance
+                        }
+                        downNeighbour = puzlock.getRight(downNeighbour.x, downNeighbour.y, downNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the down neighbour
+                        currentDistance++; //increment the distance
+                    }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
+                    distances.add(v.remainingVolumeDistance);
+                }else if (blockingDirection.equals("forward")){
+                    //go forward along the remaining volume, incrementing the distance to the furthest-away voxel...
+                    Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                    int currentDistance = 1; //the immediate neighbour has a distance of 1
+                    while (forwardNeighbour!=null){
+                        if (forwardNeighbour.value==1){ //if voxel is set
+                            v.remainingVolumeDistance = currentDistance; //set the distance to the current distance
+                        }
+                        forwardNeighbour = puzlock.getRight(forwardNeighbour.x, forwardNeighbour.y, forwardNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the forward neighbour
+                        currentDistance++; //increment the distance
+                    }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
+                    distances.add(v.remainingVolumeDistance);
+                }else if (blockingDirection.equals("backward")){
+                    //go backward along the remaining volume, incrementing the distance to the furthest-away voxel...
+                    Voxel backwardNeighbour = puzlock.getBackward(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                    int currentDistance = 1; //the immediate neighbour has a distance of 1
+                    while (backwardNeighbour!=null){
+                        if (backwardNeighbour.value==1){ //if voxel is set
+                            v.remainingVolumeDistance = currentDistance; //set the distance to the current distance
+                        }
+                        backwardNeighbour = puzlock.getRight(backwardNeighbour.x, backwardNeighbour.y, backwardNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the backward neighbour
+                        currentDistance++; //increment the distance
+                    }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
+                    distances.add(v.remainingVolumeDistance);
+                } 
+                
+            }
+            //sort the candidates from closest to furthest away...
+            Collections.sort(distances); //sorts the stored accessibility values from smallest to largest
+            System.out.println("Debug printing the distances of voxels to furthest voxel in the remaining volume along the blocking direction...");
+            for (Integer i: distances) {
+                System.out.print(i+" ");
+            }System.out.println("");
+            //get the first voxel which appears in both lists iteratavely until we have 10...
+            
+        }else{
+            shortlist = candidateSeedVoxels;
+        }
+        return shortlist;
     }
 
     //2.2. Create an initial Pi+1

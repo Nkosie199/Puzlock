@@ -64,7 +64,7 @@ public class Puzlock {
         //1.1. Pick a seed voxel
         pickSeedVoxel(inputVoxelizedMesh);
         //1.2. Compute voxel accessibility
-        computeVoxelAccessibility();
+        voxels = computeVoxelAccessibility(inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
         //1.3. Ensure blocking and mobility
         ensureBlockingMobility();
         //1.4. Expand the key piece
@@ -132,7 +132,7 @@ public class Puzlock {
     }
 
     //1.2. Compute voxel accessibility
-    static void computeVoxelAccessibility(){
+    static ArrayList<Voxel> computeVoxelAccessibility(int [][][] vMesh, int vMeshSize, ArrayList<Voxel> vs){
     	System.out.println("1.2. Computing voxel accessibility...");
         /* • Compute an accessibility value, aj(x), for each voxel x in a remaining volume, and use it later as a heuristic to alleviate fragmentation, 
         where aj(x) is computed by recursively counting the (weighted) number of voxel neighbours: 
@@ -143,14 +143,14 @@ public class Puzlock {
         Since voxels with low accessibility are likely to be fragmented, we prioritize to include them when constructing a puzzle piece.*/
         // first pass - simple neighbour count
         int p=1; //stores index of iterator
-        for (int z=0; z<inputVoxelizedMesh.length; z++){
-            for (int y=0; y<inputVoxelizedMesh.length; y++){
-                for (int x=0; x<inputVoxelizedMesh.length; x++){
-                    if (inputVoxelizedMesh[z][y][x] == 1){
+        for (int z=0; z<vMeshSize; z++){
+            for (int y=0; y<vMeshSize; y++){
+                for (int x=0; x<vMeshSize; x++){
+                    if (vMesh[z][y][x] == 1){
                         //get the voxel at that index and set its accessibility value...
-                        int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
-                        Voxel v = voxels.get(index);
-                        int neighbours = countNeighbours(v,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels);
+                        int index = indexOfCoordinate(x,y,z,vMeshSize);
+                        Voxel v = vs.get(index);
+                        int neighbours = countNeighbours(v,vMesh,vMeshSize,vs);
                         v.accessibilityValue = neighbours;
                         System.out.println(p+") Voxel "+v+" at index "+x+","+y+","+z+" has "+neighbours+" neighbours");
                         p++;
@@ -161,10 +161,10 @@ public class Puzlock {
         System.out.println("");
         // subsequent passes - implicitly include neighbours from further afield...
         int passes = 3; //# of passes (j from the eqn in the paper) i.e. = 3
-        ArrayList<Voxel> voxels2 = new ArrayList<>(); //create a new voxels arraylist to store the set of new voxels and corresponding access values
         int q = 0; //stores the current index
         int pass = 1; //stores the pass number, ranging from 1 to 3
-        subsequentPasses(voxels, voxels2, passes, pass, q); 
+        ArrayList<Voxel> voxels2 = subsequentPasses(vMesh, vMeshSize, vs, passes, pass, q); 
+        return voxels2;
     }
 
     //1.3. Ensure blocking and mobility
@@ -567,7 +567,7 @@ public class Puzlock {
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
                 //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to right neighbour @ "+v.x+","+v.y+","+v.z);
-        	}
+            }
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
         }
@@ -577,7 +577,7 @@ public class Puzlock {
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
                 //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to up neighbour @ "+v.x+","+v.y+","+v.z);
-        	}
+            }
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
         }
@@ -587,7 +587,7 @@ public class Puzlock {
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
                 //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to down neighbour @ "+v.x+","+v.y+","+v.z);
-        	}
+            }
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
         }
@@ -597,7 +597,7 @@ public class Puzlock {
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
                 //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to forward neighbour @ "+v.x+","+v.y+","+v.z);
-        	}
+            }
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
         }
@@ -607,7 +607,7 @@ public class Puzlock {
                 double accVal = v.accessibilityValue; //accessibilty value of the voxel at that index
                 sum = sum + accVal;
                 //System.out.println("Updated voxel @ "+x+","+y+","+z+"'s access value to "+sum+" thanks to backward neighbour @ "+v.x+","+v.y+","+v.z);
-        	}
+            }
         }catch(Exception e){
         	//System.out.println("Exception: "+e);
         }
@@ -1056,34 +1056,46 @@ public class Puzlock {
         System.out.println("-------------------------------------------------------------------------------------------");
     }
     
-    static void subsequentPasses(ArrayList<Voxel> oldvoxels, ArrayList<Voxel> newvoxels, int noOfPasses, int pass, int q) {
-        if (pass <= noOfPasses) { //for the sake of recursion...
-            for (int z=0; z<inputVoxelizedMeshSize; z++){
-                for (int y=0; y<inputVoxelizedMeshSize; y++){
-                    for (int x=0; x<inputVoxelizedMeshSize; x++){
-                        if (inputVoxelizedMesh[z][y][x] == 1){
+    static ArrayList<Voxel> subsequentPasses(int[][][] vMesh, int vMeshSize, ArrayList<Voxel> oldvoxels, int noOfPasses, int pass, int q) {
+        System.out.println("Subsequent pass #"+pass);
+        for (int p=pass; p < noOfPasses; p++) { //for the sake of bot using recursion...
+            ArrayList<Voxel> newvoxels = new ArrayList<>();
+            for (int z=0; z<vMeshSize; z++){
+                for (int y=0; y<vMeshSize; y++){
+                    for (int x=0; x<vMeshSize; x++){
+                        if (vMesh[z][y][x] == 1){
                             //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
                             double newAccessValue; //stores the new accessibility value as per the subsequent passes
-                            int index = indexOfCoordinate(x,y,z, inputVoxelizedMeshSize);
                             double weightFactor = 0.1; //set to 0.1 in Song et al (2012) implementation
-                            double power = (double) Math.pow(weightFactor, pass); //alpha to the power of j in Song et al (2012) implementation
-                            double sum = sumOfNeighboursAccValues(x,y,z,inputVoxelizedMesh,inputVoxelizedMeshSize,voxels); //stores the sum of accessibilty values of the voxel's neighbours
+                            double power = (double) Math.pow(weightFactor, p); //alpha to the power of j in Song et al (2012) implementation
+                            double sum = sumOfNeighboursAccValues(x,y,z,vMesh,vMeshSize,oldvoxels); //stores the sum of accessibilty values of the voxel's neighbours
+                            int index = indexOfCoordinate(x,y,z,vMeshSize);
+                            //System.out.println("Debug printing... index: "+index+" voxel size: "+oldvoxels.size());
                             Voxel v = oldvoxels.get(index);
+                            //System.out.println("Sum of neighbours accessibility values of voxel at "+v.x+","+v.y+","+v.z+" is "+sum);
                             newAccessValue = v.accessibilityValue + (power * sum); //A = B. Calculates the new accessibility value
                             Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //the new voxel which is based on the old voxel and has a new accessibility value                    
                             v2.accessibilityValue = newAccessValue;
                             newvoxels.add(v2); //add v2 to newvoxels to store it
-                            System.out.println(q+") Voxel "+v2+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
+                            System.out.println(q+") Voxel "+v2+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue+" from voxel at "+v.x+","+v.y+","+v.z+" with accessibility value "+v.accessibilityValue);
                             q++;
+                        }else if (vMesh[z][y][x] == 0){
+                            //B_ijk = A_ijk + pow(alpha, pass) * sum of A_ijk values in neighbours of ijk
+                            double newAccessValue; //stores the new accessibility value as per the subsequent passes
+                            int index = indexOfCoordinate(x,y,z,vMeshSize);
+                            Voxel v = oldvoxels.get(index);
+                            Voxel v2 = new Voxel(v.x, v.y, v.z, v.value); //the new voxel which is based on the old voxel and has a new accessibility value 
+                            newAccessValue = v.accessibilityValue;
+                            v2.accessibilityValue = newAccessValue;
+                            newvoxels.add(v2); //add v2 to newvoxels to store it
+//                            System.out.println(q+") Voxel "+v2+" at index "+x+","+y+","+z+" has accessibility value "+newAccessValue);
+//                            q++;
                         }
                     }
-                }
+                } 
             }
-            System.out.println("");
-            pass++; //increase the pass by one
-            ArrayList<Voxel> voxels2 = new ArrayList<>(); //create a new voxels arraylist to store the set of new voxels and corresponding access values
-            subsequentPasses(newvoxels, voxels2, noOfPasses, pass, q); //recurse with the new set of voxels being old and a new array being new
+            oldvoxels = newvoxels; //iterative case
         }
-        voxels = oldvoxels; //now we can replace the global set of voxels with the new set of voxels
+        return oldvoxels; //now we can replace the global set of voxels with the new set of voxels
     }
 }
