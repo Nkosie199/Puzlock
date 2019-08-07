@@ -418,8 +418,7 @@ public class Puzlock2 {
                         currentDistance++; //increment the distance
                     }System.out.println("Voxel @ "+v.x+","+v.y+","+v.z+" has blocking direction "+blockingDirection+" and a blocking distance of "+v.remainingVolumeDistance);
                     distances.add(v.remainingVolumeDistance);
-                } 
-                
+                }
             }
             //sort the candidates from closest to furthest away...
             Collections.sort(distances); //sorts the stored accessibility values from smallest to largest
@@ -476,8 +475,110 @@ public class Puzlock2 {
         (i) from each candidate, we identify all voxels in Ri along d>i+1 (see the orange voxels in Figure 11(d)) 
         since these voxels must be taken to Pi+1 to make the candidate removable along d>i+1;
         //for each voxel we will generate an associated cost, we will proceed voxel with the smallest voxel...*/
-        for (Voxel v: shortlist) {
-            
+        int lowestCost = 1000000; //initialize the lowest cost to infinity
+        int currentCost = 1000000; //initialize the current cost to infinity
+        Voxel source = null; //stores the current seed from the shortist in order to save the one with the lowest cost
+        Voxel destination = null; //stores the current neighbour along the removable direction in order to save the one with the lowest cost
+        for (Voxel v: shortlist) { //for each voxel in the shortlist
+            //get its blocking direction
+            String blockingDirection = v.removableDirection;
+            if (blockingDirection.equals("left")){
+                //go left along the remaining volume, incrementing the distance to the furthest-away voxel...
+                Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);              
+                while (leftNeighbour!=null){
+                    if (leftNeighbour.value==1){ //if voxel is set
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, leftNeighbour); //get the path from the current voxel (v) to the neighbour
+                        currentCost = sp2.cost; //set the cost to the current distance
+                        if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
+                            lowestCost = currentCost; //save the lowest cost
+                            source = v; //save the lowest cost seed
+                            destination = leftNeighbour; //save the lowest cost neighbour
+                            System.out.println("Updated the lowest cost to "+lowestCost+". From voxel @ "+source.getCoordinates()+" to voxel @ "+destination.getCoordinates());
+                        }
+                    }
+                    leftNeighbour = puzlock.getLeft(leftNeighbour.x, leftNeighbour.y, leftNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the left neighbour
+                }
+            }else if (blockingDirection.equals("right")){
+                //go right along the remaining volume, incrementing the distance to the furthest-away voxel...
+                Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                while (rightNeighbour!=null){
+                    if (rightNeighbour.value==1){ //if voxel is set
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, rightNeighbour); //get the path from the current voxel (v) to the neighbour
+                        currentCost = sp2.cost; //set the cost to the current distance
+                        if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
+                            lowestCost = currentCost; //save the lowest cost
+                            source = v; //save the lowest cost seed
+                            destination = rightNeighbour; //save the lowest cost neighbour
+                            System.out.println("Updated the lowest cost to "+lowestCost+". From voxel @ "+source.getCoordinates()+" to voxel @ "+destination.getCoordinates());
+                        }
+                    }
+                    rightNeighbour = puzlock.getRight(rightNeighbour.x, rightNeighbour.y, rightNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the right neighbour
+                }
+            }else if (blockingDirection.equals("up")){
+                //go up along the remaining volume, incrementing the distance to the furthest-away voxel...
+                Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                while (upNeighbour!=null){
+                    if (upNeighbour.value==1){ //if voxel is set
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, upNeighbour); //get the path from the current voxel (v) to the neighbour
+                        currentCost = sp2.cost; //set the cost to the current distance
+                        if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
+                            lowestCost = currentCost; //save the lowest cost
+                            source = v; //save the lowest cost seed
+                            destination = upNeighbour; //save the lowest cost neighbour
+                            System.out.println("Updated the lowest cost to "+lowestCost+". From voxel @ "+source.getCoordinates()+" to voxel @ "+destination.getCoordinates());
+                        }
+                    }
+                    upNeighbour = puzlock.getUp(upNeighbour.x, upNeighbour.y, upNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the up neighbour
+                }
+            }else if (blockingDirection.equals("down")){
+                //go down along the remaining volume, incrementing the distance to the furthest-away voxel...
+                Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                while (downNeighbour!=null){
+                    if (downNeighbour.value==1){ //if voxel is set
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, downNeighbour); //get the path from the current voxel (v) to the neighbour
+                        currentCost = sp2.cost; //set the cost to the current distance
+                        if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
+                            lowestCost = currentCost; //save the lowest cost
+                            source = v; //save the lowest cost seed
+                            destination = downNeighbour; //save the lowest cost neighbour
+                            System.out.println("Updated the lowest cost to "+lowestCost+". From voxel @ "+source.getCoordinates()+" to voxel @ "+destination.getCoordinates());
+                        }
+                    }
+                    downNeighbour = puzlock.getRight(downNeighbour.x, downNeighbour.y, downNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the down neighbour
+                }
+            }else if (blockingDirection.equals("forward")){
+                //go forward along the remaining volume, incrementing the distance to the furthest-away voxel...
+                Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                while (forwardNeighbour!=null){
+                    if (forwardNeighbour.value==1){ //if voxel is set
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, forwardNeighbour); //get the path from the current voxel (v) to the neighbour
+                        currentCost = sp2.cost; //set the cost to the current distance
+                        if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
+                            lowestCost = currentCost; //save the lowest cost
+                            source = v; //save the lowest cost seed
+                            destination = forwardNeighbour; //save the lowest cost neighbour
+                            System.out.println("Updated the lowest cost to "+lowestCost+". From voxel @ "+source.getCoordinates()+" to voxel @ "+destination.getCoordinates());
+                        }
+                    }
+                    forwardNeighbour = puzlock.getRight(forwardNeighbour.x, forwardNeighbour.y, forwardNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the forward neighbour
+                }
+            }else if (blockingDirection.equals("backward")){
+                //go backward along the remaining volume, incrementing the distance to the furthest-away voxel...
+                Voxel backwardNeighbour = puzlock.getBackward(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
+                while (backwardNeighbour!=null){
+                    if (backwardNeighbour.value==1){ //if voxel is set
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, backwardNeighbour); //get the path from the current voxel (v) to the neighbour
+                        currentCost = sp2.cost; //set the cost to the current distance
+                        if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
+                            lowestCost = currentCost; //save the lowest cost
+                            source = v; //save the lowest cost seed
+                            destination = backwardNeighbour; //save the lowest cost neighbour
+                            System.out.println("Updated the lowest cost to "+lowestCost+". From voxel @ "+source.getCoordinates()+" to voxel @ "+destination.getCoordinates());
+                        }
+                    }
+                    backwardNeighbour = puzlock.getRight(backwardNeighbour.x, backwardNeighbour.y, backwardNeighbour.z, remainingMesh, remainingMeshSize, remainingVoxels); //update the backward neighbour
+                }
+            }
         }
         
         /*(ii) we determine a shortest path to connect the candidate to these identified voxels (Figure 11(e)), and 
