@@ -24,6 +24,7 @@ public class Puzlock2 {
     static ArrayList<Voxel> remainingPieceVoxels = puzlock.initializeVoxelArray(remainingPiece); //stores the key piece as an arraylist of voxels
     static int keyPieceSize; //the size of the array on the z a-axis
     static ArrayList<String> removableDirections = new ArrayList<>(); //stores the directions in which the key piece is removable
+    static String keyRemovableDirection;
     
     public static void main(String[] args){
         //2. Extracting other puzzle pieces...
@@ -34,7 +35,8 @@ public class Puzlock2 {
         //2.0. Check movable direction(s)
         ArrayList<String> targetMovingDirection = checkRemovableDirections(keyPieceVoxels, keyPiece, keyPieceSize, removableDirections);        
         if (targetMovingDirection.size() == 1){ //if the keyPiece has only one moving direction, it can be confirmed to be correct...
-            System.out.println("Target moving direction of key piece is "+targetMovingDirection.get(0));
+            keyRemovableDirection = targetMovingDirection.get(0);
+            System.out.println("Target moving direction of key piece is "+keyRemovableDirection);
         }else{
             System.out.println("Key piece has less or more than one target moving direction...");
             for (String s: targetMovingDirection) {
@@ -49,7 +51,7 @@ public class Puzlock2 {
         ArrayList<Voxel> shortlistedSeeds = shortlistCandidates(remainingPiece, keyPieceSize, remainingPieceVoxels, candidateSeeds, removableDirections);
         //2.2. Create an initial Pi+1
         //createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, String removableDirection)
-        createInitialPafter(shortlistedSeeds, remainingPiece, keyPieceSize, remainingPieceVoxels, removableDirections.get(0));
+        createInitialPafter(shortlistedSeeds, remainingPiece, keyPieceSize, remainingPieceVoxels);
         //2.3. Ensure local interlocking
         ensureLocalInterlocking();
         //2.4. Expand Pi+1 and Confirm it
@@ -159,6 +161,7 @@ public class Puzlock2 {
 
     //2.1. Candidate seed voxels
     static ArrayList<Voxel> candidateSeedVoxels(ArrayList<Voxel> keyPiece, int[][][] vMesh, int vMeshSize, ArrayList<String> removableDirections){
+        System.out.println("2.1. Candidate seed voxels...");
         /* • Since Pi+1 is blocked by Pi, but becomes mobilized as soon as Pi is removed, at least one of its voxel must reside next to Pi. 
         Since successive puzzle pieces should move in different directions (by Lemma 3 in Appendix), we use the contact between Pi and Pi+1 to define d>i+1 for blocking Pi+1 
         by the presence of Pi. Our strategy is to pick voxels (in Ri) next to Pi as candidate seeds, requiring them to contact P i in a direction perpendicular to d>i. 
@@ -168,8 +171,8 @@ public class Puzlock2 {
         String removableDirection = removableDirections.get(0); //we must ensure that the neighbour is not in the opposite direction of the removable direction
         for (Voxel v: keyPiece){ //for each voxel, get its neighbours
             if (v.value==1){ //if the voxel is set
-                Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece); 
-                Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece); 
+                Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
+                Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
                 Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
                 Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
                 Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, vMesh, vMeshSize, keyPiece);
@@ -469,7 +472,8 @@ public class Puzlock2 {
     }
 
     //2.2. Create an initial Pi+1
-    static void createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, String removableDirection){
+    static void createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels){
+        System.out.println("2.2. Create an initial Pi+1...");
         /* • After step 1, we have a set of candidate seeds, each associated with a d> i+1. 
         Our next step is to pick one of them by examining its cost of making Pi+1 removable in d>i+1: 
         (i) from each candidate, we identify all voxels in Ri along d>i+1 (see the orange voxels in Figure 11(d)) 
@@ -479,15 +483,19 @@ public class Puzlock2 {
         int currentCost = 1000000; //initialize the current cost to infinity
         Voxel source = null; //stores the current seed from the shortist in order to save the one with the lowest cost
         Voxel destination = null; //stores the current neighbour along the removable direction in order to save the one with the lowest cost
+        int iterator = 1;
         for (Voxel v: shortlist) { //for each voxel in the shortlist
             //get its blocking direction
             String blockingDirection = v.removableDirection;
+            System.out.println(iterator+") At voxel @ "+v.getCoordinates()+" with blocking direction: "+blockingDirection);
+            iterator++;
             if (blockingDirection.equals("left")){
                 //go left along the remaining volume, incrementing the distance to the furthest-away voxel...
                 Voxel leftNeighbour = puzlock.getLeft(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);              
                 while (leftNeighbour!=null){
                     if (leftNeighbour.value==1){ //if voxel is set
-                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, leftNeighbour); //get the path from the current voxel (v) to the neighbour
+                        //(ArrayList<Voxel> voxels, Voxel source, Voxel destination, int[][][] inputVoxelizedMesh, int inputVoxelizedMeshSize){
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, leftNeighbour, remainingMesh, remainingMeshSize); //get the path from the current voxel (v) to the neighbour
                         currentCost = sp2.cost; //set the cost to the current distance
                         if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
                             lowestCost = currentCost; //save the lowest cost
@@ -503,7 +511,7 @@ public class Puzlock2 {
                 Voxel rightNeighbour = puzlock.getRight(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
                 while (rightNeighbour!=null){
                     if (rightNeighbour.value==1){ //if voxel is set
-                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, rightNeighbour); //get the path from the current voxel (v) to the neighbour
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, rightNeighbour, remainingMesh, remainingMeshSize); //get the path from the current voxel (v) to the neighbour
                         currentCost = sp2.cost; //set the cost to the current distance
                         if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
                             lowestCost = currentCost; //save the lowest cost
@@ -519,7 +527,7 @@ public class Puzlock2 {
                 Voxel upNeighbour = puzlock.getUp(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
                 while (upNeighbour!=null){
                     if (upNeighbour.value==1){ //if voxel is set
-                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, upNeighbour); //get the path from the current voxel (v) to the neighbour
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, upNeighbour, remainingMesh, remainingMeshSize); //get the path from the current voxel (v) to the neighbour
                         currentCost = sp2.cost; //set the cost to the current distance
                         if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
                             lowestCost = currentCost; //save the lowest cost
@@ -535,7 +543,7 @@ public class Puzlock2 {
                 Voxel downNeighbour = puzlock.getDown(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
                 while (downNeighbour!=null){
                     if (downNeighbour.value==1){ //if voxel is set
-                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, downNeighbour); //get the path from the current voxel (v) to the neighbour
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, downNeighbour, remainingMesh, remainingMeshSize); //get the path from the current voxel (v) to the neighbour
                         currentCost = sp2.cost; //set the cost to the current distance
                         if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
                             lowestCost = currentCost; //save the lowest cost
@@ -551,7 +559,7 @@ public class Puzlock2 {
                 Voxel forwardNeighbour = puzlock.getForward(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
                 while (forwardNeighbour!=null){
                     if (forwardNeighbour.value==1){ //if voxel is set
-                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, forwardNeighbour); //get the path from the current voxel (v) to the neighbour
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, forwardNeighbour, remainingMesh, remainingMeshSize); //get the path from the current voxel (v) to the neighbour
                         currentCost = sp2.cost; //set the cost to the current distance
                         if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
                             lowestCost = currentCost; //save the lowest cost
@@ -567,7 +575,7 @@ public class Puzlock2 {
                 Voxel backwardNeighbour = puzlock.getBackward(v.x, v.y, v.z, remainingMesh, remainingMeshSize, remainingVoxels);
                 while (backwardNeighbour!=null){
                     if (backwardNeighbour.value==1){ //if voxel is set
-                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, backwardNeighbour); //get the path from the current voxel (v) to the neighbour
+                        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, v, backwardNeighbour, remainingMesh, remainingMeshSize); //get the path from the current voxel (v) to the neighbour
                         currentCost = sp2.cost; //set the cost to the current distance
                         if (currentCost < lowestCost){ //if this cost is the lowest cost, save the currentVoxel and its neighbour
                             lowestCost = currentCost; //save the lowest cost
