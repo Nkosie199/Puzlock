@@ -72,7 +72,7 @@ public class Puzlock {
         //1.5. Confirm the key piece
         confirmKeyPiece(keyPiece);
         //n. Print keyPiece(s)
-        setOutputPieces(keyPiece, inputVoxelizedMeshSize); //will set outputVoxelizedMesh
+        outputVoxelizedMesh = setOutputPieces(keyPiece, inputVoxelizedMeshSize, outputVoxelizedMesh); //will set outputVoxelizedMesh
         System.out.println("\nDebug printing output mesh and printing to file...");
         debugPrintVoxelizedMesh(outputVoxelizedMesh);
         io.printGridToFile(outputVoxelizedMesh, "keyPiece"); //should print the key piece to a file called keyPiece
@@ -361,7 +361,6 @@ public class Puzlock {
     
     /* debug prints the voxels array */
     static void debugPrintVoxels(ArrayList<Voxel> voxels){
-        System.out.println("Debug printing voxels...");
         for (int i=0; i<voxels.size(); i++) {
             Voxel v = voxels.get(i);
             System.out.println(i+") "+v+" is at "+v.x+","+v.y+","+v.z);
@@ -370,20 +369,20 @@ public class Puzlock {
     }
     
     /* Takes in a puzzle piece(as an array) to print and sets it to outputVoxelizedMesh */
-    static int[][][] setOutputPieces(ArrayList<Voxel> piece, int size){
+    static int[][][] setOutputPieces(ArrayList<Voxel> piece, int size, int[][][] outputMesh){
         //remember: current program only works with grids of 32x32x32
-        outputVoxelizedMesh = new int[size][size][size];
+        outputMesh = new int[size][size][size];
         //first initialize outputVoxelizedMesh to all 0s...
         for (int z = 0; z < size; z++) { //for each voxel...
             for (int y = 0; y < size; y++) {
                 for (int x = 0; x < size; x++) {
-                	outputVoxelizedMesh[z][y][x] = 0; //set index to 0
+                	outputMesh[z][y][x] = 0; //set index to 0
                 }
             }
         }
         //now we can add 1s where appropriate...
         for (int i = 0; i < piece.size(); i++) { //for each voxel in the piece...
-        	Voxel voxel = piece.get(i); //stores the current voxel
+            Voxel voxel = piece.get(i); //stores the current voxel
             int xcoord = voxel.x; //stores the current x co-ordinate
             int ycoord = voxel.y; //stores the current y co-ordinate
             int zcoord = voxel.z; //stores the current z co-ordinate
@@ -391,13 +390,13 @@ public class Puzlock {
                 for (int y = 0; y < size; y++) {
                     for (int x = 0; x < size; x++) {
                         if ((x==xcoord) && (y==ycoord) && (z==zcoord)){ //if index is 0 or null and the co-ordinates match
-                        	outputVoxelizedMesh[z][y][x] = 1; //set index to 0
+                        	outputMesh[z][y][x] = 1; //set index to 0
                         }
                     }
                 }
             }
         }
-        return outputVoxelizedMesh;
+        return outputMesh;
     }
     
     /* Takes in the co-ordinates of voxel and checks if there a voxel to the left in the inputVoxelizedMesh */
@@ -1051,7 +1050,7 @@ public class Puzlock {
     
     static void debugPrintOutput(ArrayList<Voxel> keyPiece){
         System.out.println("\nCOMPLETE! Debug printing "+keyPiece.size()+" voxels of the final puzzle piece...");
-        setOutputPieces(keyPiece, inputVoxelizedMeshSize); //represent a new puzzle piece in a 3D array
+        outputVoxelizedMesh = setOutputPieces(keyPiece, inputVoxelizedMeshSize, outputVoxelizedMesh); //represent a new puzzle piece in a 3D array
         debugPrintVoxelizedMesh(outputVoxelizedMesh); //print out the currently set output voxelized mesh
         System.out.println("-------------------------------------------------------------------------------------------");
     }

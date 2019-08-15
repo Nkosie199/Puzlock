@@ -12,6 +12,7 @@ public class Voxel {
     int value; //if value is 0, no voxel. Otherwise value > 0 is a specific voxel
     public String removableDirection; //used in section 5.2.1 - the direction for blocking Piece(i+1)
     public int remainingVolumeDistance = 0; //used in section 5.2.1 to store the distance to the furthest away voxel in the remaining volume along the removable direction
+    public int shortlistRank; //used in section 5.2.1 to get the 10 best candidates according to the equally weighted criteria
     
     public Voxel(int x, int y, int z, int value){
         this.x = x;

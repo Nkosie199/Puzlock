@@ -15,7 +15,7 @@ public class ShortestPath {
     static Voxel anchorVoxel = null; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
     static Voxel anchorVoxel2 = null; //stores the second anchor voxel as per section 4
     
-    /* takes in the voxel array, source (seed), destination (blockee) and the blocking voxel*/
+    /* takes in the voxel array, source (seed), destination (blockee) and the blocking (the set of voxels which should not be visited) voxels*/
     public ShortestPath(ArrayList<Voxel> voxels, Voxel source, Voxel destination, Voxel blocking){
         //0. initialize the variables...
         visitedVoxels = new ArrayList<>();
@@ -251,7 +251,7 @@ public class ShortestPath {
                 System.out.print(currentVoxel.getCoordinates()+"(in path); ");
                 for (int k=currentVoxel.y; k>=0; k--){ //for each y co-ordinate from the current voxel's y co-ordinate to top (0)
                     Voxel above = puzlock.getUp(currentVoxel.x, k, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, puzlock.voxels);
-                    if ((above != null) && (!removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
+                    if ((above != null) && (above.value == 1) && (!removablePiece.contains(above)) && (currentVoxel != anchor)){ //if y co-ordinate is less than that of the current voxel i.e. on top of it and it has not been added yet
                         removablePiece.add(above); //add it to the set of candidate voxels (represented in figure 9(e))
                         System.out.print(above.getCoordinates()+"(on top); ");
                     }
@@ -261,7 +261,6 @@ public class ShortestPath {
         //should debug print the removable piece here, remember to ensure that the anchor is not added...
         ArrayList<Voxel> rPiece = (ArrayList)removablePiece.clone(); //clone the removable piece to avoid the concurrency issue
         puzlock.removablePieces.add(rPiece); //store the removable piece
-        
     }
     
     /* find the piece with the smallest sum of accessibility values 
