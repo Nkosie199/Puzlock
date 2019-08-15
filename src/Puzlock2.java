@@ -1,3 +1,5 @@
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -7,6 +9,7 @@ import java.util.Collections;
  */
 public class Puzlock2 {
     static Puzlock puzlock = new Puzlock(); //we will need some Puzlock methods to get the current neighbours etc
+    static IO io = new IO();
     //start with an example of a valid key piece (red piece as per pg. 6 of Song et al. 2012)...
     static int[][][] keyPiece = {
         {{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}, 
@@ -26,7 +29,7 @@ public class Puzlock2 {
     static ArrayList<String> removableDirections = new ArrayList<>(); //stores the directions in which the key piece is removable
     static String keyRemovableDirection;
     
-    public static void main(String[] args){
+    public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{
         //2. Extracting other puzzle pieces...
         keyPieceSize = keyPiece[0].length; //set the size to be used
         System.out.println("Key piece dimensions: "+keyPieceSize);
@@ -472,7 +475,7 @@ public class Puzlock2 {
     }
 
     //2.2. Create an initial Pi+1
-    static void createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels){
+    static void createInitialPafter(ArrayList<Voxel> shortlist, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels) throws FileNotFoundException, UnsupportedEncodingException{
         System.out.println("2.2. Create an initial Pi+1...");
         /* • After step 1, we have a set of candidate seeds, each associated with a d> i+1. 
         Our next step is to pick one of them by examining its cost of making Pi+1 removable in d>i+1: 
@@ -588,7 +591,15 @@ public class Puzlock2 {
                 }
             }
         }
-        
+        //now we will use the current cost, source, destination and direction to make the saved piece removable along the blocking direction...
+        ShortestPath2 sp2 = new ShortestPath2(remainingVoxels, source, destination, remainingMesh, remainingMeshSize); //get the path from the source to the destination
+        ArrayList<Voxel> removablePiece = sp2.makeRemovable(sp2.currentShortestPath, source.removableDirection, remainingMesh, remainingMeshSize, remainingVoxels);
+        System.out.println("\nDebug printing the removable piece...");
+        puzlock.debugPrintVoxels(removablePiece);
+        //int[][][] setOutputPieces(ArrayList<Voxel> piece, int size, int[][][] outputMesh){
+        int[][][] rPiece = new int[32][32][32];;
+        rPiece = puzlock.setOutputPieces(removablePiece, remainingMeshSize, rPiece);
+        io.printGridToFile(rPiece, "removablePiece"); //should print the key piece to a file called keyPiece
         /*(ii) we determine a shortest path to connect the candidate to these identified voxels (Figure 11(e)), and 
         (iii) we locate also any additional voxel required to mobilize the shortest path towards d>i+1 (Figure 11(f)). 
         To choose among the candidates, we sum the accessibility of all the voxels involved in each candidate path (blue voxels in Figure 11(f)), 
@@ -596,7 +607,6 @@ public class Puzlock2 {
     }
     
     static int voxelsAlongDirection(Voxel currentVoxel, int[][][] remainingMesh, int remainingMeshSize, ArrayList<Voxel> remainingVoxels, String removableDirection){
-        
         
         return -1;
     }
