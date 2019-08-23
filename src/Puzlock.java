@@ -90,39 +90,64 @@ public class Puzlock {
         //• Identify a set of exterior voxels that have exactly a pair of adjacent exterior faces (with one being on top). 
         //Require that these voxels can move out of the puzzle in one movement.
         int i=0;
+        ArrayList<Voxel> duplicates = new ArrayList<>();
         System.out.println("Top: "+top+". Size: "+inputVoxelizedMeshSize);
         for (Voxel v: voxels){
             if (v.y == top){ //i.e. if voxel is at the top
-                if (getLeft(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
-                    //and if the 3D array has 0 or null at the left co-ordinate of that voxel...
-                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
-                    v.normalDirection = "left";
-                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
-                    i++;
+                Voxel leftNeighbour = getLeft(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                Voxel rightNeighbour = getRight(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                Voxel forwardNeighbour = getForward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                Voxel backwardNeighbour = getBackward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                if (leftNeighbour==null || leftNeighbour.value==0){ //and if the 3D array has 0 or null at the left co-ordinate of that voxel...                  
+                    if (exteriorVoxels.contains(v)){ 
+                        duplicates.add(v);
+                    }else{
+                        exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
+                        v.normalDirection = "left";
+                        System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                        i++;
+                    }
                 }
-                if (getRight(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
-                    //and if the 3D array has 0 or null at the right co-ordinate of that voxel...
-                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
-                    v.normalDirection = "right";
-                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
-                    i++;
+                if (rightNeighbour==null || rightNeighbour.value==0){ //and if the 3D array has 0 or null at the right co-ordinate of that voxel...                
+                    if (exteriorVoxels.contains(v)){ 
+                        duplicates.add(v);
+                    }else{
+                        exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
+                        v.normalDirection = "right";
+                        System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                        i++;
+                    }
                 }
-                if (getForward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
-                    //and if the 3D array has 0 or null at the forward co-ordinate of that voxel...
-                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
-                    v.normalDirection = "forward";
-                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
-                    i++;
+                if (forwardNeighbour==null || forwardNeighbour.value==0){ //and if the 3D array has 0 or null at the forward co-ordinate of that voxel...                  
+                    if (exteriorVoxels.contains(v)){ 
+                        duplicates.add(v);
+                    }else{
+                        exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
+                        v.normalDirection = "forward";
+                        System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                        i++;
+                    }
                 }
-                if (getBackward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels) == null){
-                    //and if the 3D array has 0 or null at the backward co-ordinate of that voxel...
-                    exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
-                    v.normalDirection = "backward";
-                    System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
-                    i++;
+                if (backwardNeighbour==null || backwardNeighbour.value==0){ //and if the 3D array has 0 or null at the backward co-ordinate of that voxel...
+                    if (exteriorVoxels.contains(v)){ 
+                        duplicates.add(v);
+                    }else{
+                        exteriorVoxels.add(v); //this voxel should have met the requirement of being able to move out of the puzzle in one movement
+                        v.normalDirection = "backward";
+                        System.out.println(i+") Added exterior voxel: "+v+" at co-ordinates "+v.x+", "+v.y+", "+v.z+" with normal direction "+v.normalDirection); //debug print the set of added exterior voxels...
+                        i++;
+                    }
                 }
             }
         }
+        //now remove dublicates as they indicate more than 2 adjacent faces...
+        for (Voxel v2: duplicates) {
+            if (exteriorVoxels.contains(v2)){ //if this voxel is contained in the list of duplicates
+                 exteriorVoxels.remove(v2);
+            }
+        }
+        //debug print the exterior voxels...
+        debugPrintVoxels(exteriorVoxels);
         //• From the candidate set, we can either randomly pick a seed, or let the user make a choice.
         System.out.println("Bound: "+exteriorVoxels.size());
         int randomNum = ThreadLocalRandom.current().nextInt(0, exteriorVoxels.size());

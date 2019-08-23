@@ -13,6 +13,7 @@ public class ShortestPath {
     static ArrayList<Voxel> removablePiece; //stores piece given by the shortest path which have been made removable by adding the voxels above them
     static ArrayList currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
     static Voxel anchorVoxel = null; //each and every shortest path must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
+    
     static Voxel anchorVoxel2 = null; //stores the second anchor voxel as per section 4
     
     /* takes in the voxel array, source (seed), destination (blockee) and the blocking (the set of voxels which should not be visited) voxels*/
@@ -83,7 +84,7 @@ public class ShortestPath {
         //selectPiece(); //returns the piece with the smallest sum of accessibility values
     }
     
-    void getShortestPath(Voxel start, Voxel destination){
+    static void getShortestPath(Voxel start, Voxel destination){
         //System.out.println("Printing the path from source to destination...");
         currentShortestPath = new ArrayList<>();
         Voxel currentVoxel = destination;
@@ -96,7 +97,7 @@ public class ShortestPath {
         System.out.println(start.getCoordinates());
     }
     
-    void setAnchorVoxel(ArrayList<Voxel> path){
+    static void setAnchorVoxel(ArrayList<Voxel> path){
         //get the side opposite to the seed's normal direction...
         Voxel seed = puzlock.seedVoxel;//stores the seed voxel
         String normalDir = seed.normalDirection;
