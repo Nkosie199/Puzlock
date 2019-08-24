@@ -11,6 +11,6 @@ public class VoxelPair{
         voxel2 = v2;
     }
 
-    public Voxel getVoxel1(){ return voxel1; }
-    public Voxel getVoxel2(){ return voxel2; }
+    public Voxel getBlockingVoxel(){ return voxel1; }
+    public Voxel getBlockeeVoxel(){ return voxel2; }
 }

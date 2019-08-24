@@ -41,6 +41,7 @@ public class Puzlock {
     static IO io = new IO();
     static int top = -1; //stores the y-coordinate of the highest voxel i.e. the top
     
+    
     public static void main(String[] args) throws IOException{
         //0. Setup...
         //0.1. Read the 3D grid
@@ -152,8 +153,7 @@ public class Puzlock {
         System.out.println("Bound: "+exteriorVoxels.size());
         int randomNum = ThreadLocalRandom.current().nextInt(0, exteriorVoxels.size());
         seedVoxel = exteriorVoxels.get(randomNum);
-        System.out.println("Seed voxel was chosen among exterior voxels at index "+randomNum+"\n");
-        
+        System.out.println("Seed voxel was chosen among exterior voxels at index "+randomNum+"\n");       
     }
 
     //1.2. Compute voxel accessibility
@@ -196,9 +196,8 @@ public class Puzlock {
     static void ensureBlockingMobility(){
     	System.out.println("1.3. Ensuring blocking and mobility...");
         /* • Develop the key piece such that it is removable by a translation along one direction. 
-        Identify the normal direction (vn) of the non-upward-facing exterior face of the seed voxel. */
-        String vn = seedVoxel.normalDirection; //stores the normal direction
-        /* • Do a breadth-first traversal from the seed to find Nb1 pairs of voxels (that orient along vn) that are the nearest to the seed, 
+        Identify the normal direction (vn) of the non-upward-facing exterior face of the seed voxel. 
+        • Do a breadth-first traversal from the seed to find Nb1 pairs of voxels (that orient along vn) that are the nearest to the seed, 
         where in each pair, the voxels on the positive and negative sides of vn are called the blocker and blockee voxels, respectively. 
         Among them, we select Nb2 pairs whose blockee has the smallest accessibility among the Nb1 pairs 
         (in their implementation Nb1 and Nb2 are set to 50 and 10 respectively). */
@@ -210,13 +209,13 @@ public class Puzlock {
         ArrayList<VoxelPair> accessibleVoxelPairs = new ArrayList(); //stores the voxel pairs with the lowest accessibility values
         double maxAccVal = 0; //stores the maximum accessibility value
         for (VoxelPair p: voxelPairs) {
-            Voxel v = p.getVoxel2(); //get each blockee voxel
+            Voxel v = p.getBlockeeVoxel(); //get each blockee voxel
             accVals.add(v.accessibilityValue); //add its accessibility value
         }
         Collections.sort(accVals); //sorts the stores accessibility values
         maxAccVal = accVals.get(Nb2-1); //gets the last of the sorted array
         for (VoxelPair q: voxelPairs) { //for each voxelpair...
-            Double d = q.getVoxel2().accessibilityValue; //get the voxelpair's blockee's accessibility value
+            Double d = q.getBlockeeVoxel().accessibilityValue; //get the voxelpair's blockee's accessibility value
             //if a voxelpair's blockee has an accessibilty value less than or equal to the max of the sorted accessibility value, 
             //and it is not already in the set of accessible voxel pairs
             if ((d <= maxAccVal) && (!accessibleVoxelPairs.contains(q))){
@@ -230,15 +229,15 @@ public class Puzlock {
         for (int i=0; i<Nb2; i++) { //for each accessible voxel pair...
             //debug print the sorted list of accessibility values and voxel pairs
             VoxelPair vp = accessibleVoxelPairs.get(i);
-            Voxel blocking = vp.getVoxel1();
-            Voxel blockee = vp.getVoxel2();
+            Voxel blocking = vp.getBlockingVoxel();
+            Voxel blockee = vp.getBlockeeVoxel();
             System.out.print(i+") Access value: "+blockee.accessibilityValue);
             System.out.println(", voxel pair: "+vp+", blockee is at "+blockee.getCoordinates()+", blocking is at "+blocking.getCoordinates()+" and normal direction is "+seedVoxel.normalDirection+"...");
             System.out.print("Shortest path from "+seedVoxel.getCoordinates()+" (seed) to "+blockee.getCoordinates()+" (blockee): ");
             ArrayList<Voxel> voxels2 = (ArrayList)voxels.clone(); //must clone the array to prevent the concurrency issue
             sp = new ShortestPath(voxels2, seedVoxel, blockee, blocking); //computes the shortest path from the seed to all other voxels
             //create new puzzle piece based on the removable piece and add it to the set of stored pieces in Puzlock...
-            puzzlePieces.add(new PuzzlePiece(sp.removablePiece, sp.anchorVoxel, sp.anchorVoxel2, blocking, blockee));
+            puzzlePieces.add(new PuzzlePiece(sp.removablePiece, sp.anchorVoxels, sp.anchorVoxels2, blocking, blockee));
         }
         /* • Block the key from moving towards vn by 
         (i) determining a set of shortest path candidates from the seed to each blockee voxel candidate 
@@ -846,8 +845,8 @@ public class Puzlock {
     
     static ArrayList<Voxel> addVoxels(ArrayList<Voxel> addedVoxels, ArrayList<PuzzlePiece> pieces, int[][][] vMesh, int vMeshSize, ArrayList<Voxel> vs, ArrayList<Voxel> candidates, int beta){
         //perhaps we will need a set of neighbours?
-        Voxel anchor = null; //store these variables here so they can be used for the recursive case...
-        Voxel anchor2 = null;
+        ArrayList<Voxel> anchor = new ArrayList<>(); //store these variables here so they can be used for the recursive case...
+        ArrayList<Voxel> anchor2 = new ArrayList<>();
         Voxel blockingV = null;
         Voxel blockeeV = null;
         for (PuzzlePiece p: pieces) { //find piece p...
@@ -857,10 +856,10 @@ public class Puzlock {
                 anchor2 = p.anchorVoxel2;
                 blockingV = p.blocking;
                 blockeeV = p.blockee;
-                System.out.println("SELECTION FOUND! Anchor is at "+anchor.getCoordinates()+" and anchor2 is at "+anchor2.getCoordinates());
+                System.out.println("SELECTION FOUND!");
                 for (int i=0; i<addedVoxels.size(); i++) { //iterate through the voxels of the selected piece
                     Voxel currentVoxel = addedVoxels.get(i);
-                    if ((!currentVoxel.equals(anchor)) && (!currentVoxel.equals(anchor2))){ //if the current voxel is not any of the anchors and is actually a voxel (set to 1)
+                    if ((!anchor.contains(currentVoxel)) && (!anchor2.contains(currentVoxel))){ //if the current voxel is not any of the anchors and is actually a voxel (set to 1)
                         //add neighbouring voxels (excluding the anchors or beneath them) until addedVoxels.size() > m...
                         Voxel leftNeighbour = getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs); 
                         Voxel rightNeighbour = getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs); 
@@ -870,17 +869,23 @@ public class Puzlock {
                         Voxel backwardNeighbour = getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, vMesh, vMeshSize, vs);
                         if ((!candidates.contains(leftNeighbour)) && (!addedVoxels.contains(leftNeighbour)) && (leftNeighbour!=null) && (leftNeighbour.value==1)){ //if there is a left neighbour which is not already contained in addedVoxels nor in the set of candidates
                             candidates.add(leftNeighbour);
-                        }if ((!candidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null) && (rightNeighbour.value==1)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
+                        }
+                        if ((!candidates.contains(rightNeighbour)) && (!addedVoxels.contains(rightNeighbour)) && (rightNeighbour!=null) && (rightNeighbour.value==1)){ //if there is a right neighbour which is not already contained in addedVoxels nor in the set of candidates
                             candidates.add(rightNeighbour);
-                        }if ((!candidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null) && (upNeighbour.value==1)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
+                        }
+                        if ((!candidates.contains(upNeighbour)) && (!addedVoxels.contains(upNeighbour)) && (upNeighbour!=null) && (upNeighbour.value==1)){ //if there is an up neighbour which is not already contained in addedVoxels nor in the set of candidates
                             candidates.add(upNeighbour);
-                        }if ((!candidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null)  && (downNeighbour.value==1) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
+                        }
+                        //if ((!candidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null)  && (downNeighbour.value==1) && (downNeighbour.x==anchor.x) && (downNeighbour.y>anchor.y) && (downNeighbour.z==anchor.z))){
+                        if ((!candidates.contains(downNeighbour)) && (!addedVoxels.contains(downNeighbour)) && ((downNeighbour!=null)  && (downNeighbour.value==1))){
                             //if there is a down neighbour which is not already contained in addedVoxels nor in the set of candidates 
                             //and if it does not have a y-coordinate greater that either anchor given the same x and z
                             candidates.add(downNeighbour);
-                        }if ((!candidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null) && (forwardNeighbour.value==1)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                        }
+                        if ((!candidates.contains(forwardNeighbour)) && (!addedVoxels.contains(forwardNeighbour)) && (forwardNeighbour!=null) && (forwardNeighbour.value==1)){ //if there is a forward neighbour which is not already contained in addedVoxels nor in the set of candidates
                             candidates.add(forwardNeighbour);
-                        }if ((!candidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null) && (backwardNeighbour.value==1)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
+                        }
+                        if ((!candidates.contains(backwardNeighbour)) && (!addedVoxels.contains(backwardNeighbour)) && (backwardNeighbour!=null) && (backwardNeighbour.value==1)){ //if there is a backward neighbour which is not already contained in addedVoxels nor in the set of candidates
                             candidates.add(backwardNeighbour);
                         }
                     }
