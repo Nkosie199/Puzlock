@@ -25,7 +25,7 @@ public class ShortestPath {
         source.shortestDistanceFromSource = 0;
         source.previousVertex = null;
         //initialize the other vertices...
-        for (Voxel v: voxels){
+        for (Voxel v: Puzlock.voxels){
             //if current voxel is not equal to source (OR BLOCKING), initialize it with the default values
             if (!v.equals(source)){
                 v.shortestDistanceFromSource = maxDistance;
