@@ -2,7 +2,6 @@ import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
-
 /**
  * @author nkosi gumede
  * this class implements 'Section 5.2: Extracting other Puzzle Pieces' of Song et al. (2012)
