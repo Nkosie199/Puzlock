@@ -1,15 +1,14 @@
 import java.util.ArrayList;
-
 /**
  * A Java program for Dijkstra's single source shortest path algorithm. 
  * @author Nkosi Gumede
  */
-
 public class ShortestPath { 
     static Puzlock puzlock = new Puzlock(); //we will need some Puzlock methods to get the current neighbours etc
+    ArrayList<Voxel> unvisitedVoxels = new ArrayList<>(); //the set of unvisited nodes
     int maxDistance = 1000000; //represents the maximum distance (which is set upon initialization) i.e. infinity. Must be > total number of voxels
     static ArrayList<Voxel> removablePiece; //stores piece given by the shortest path which have been made removable by adding the voxels above them
-    static ArrayList currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
+    static ArrayList<Voxel> currentShortestPath; //stores the set of voxels with represent the shortest path a voxels A to B. Stored from B to A
     static Voxel anchorVoxel = null; //stores an anchor voxel
     static ArrayList<Voxel> anchorVoxels = new ArrayList<>(); //each and every blocking direction must have one anchor voxel which is furthest away the seed of the size opposite the normal direction
     static Voxel anchorVoxel2 = null; //stores the current second anchor voxel
@@ -19,15 +18,16 @@ public class ShortestPath {
     /* takes in the voxel array, source (seed), destination (blockee) and the blocking (the set of voxels which should not be visited) voxels*/
     public ShortestPath(ArrayList<Voxel> voxels, Voxel source, Voxel destination, Voxel blocking){
         //0. initialize the variables...
-        ArrayList<Voxel> unvisitedVoxels = (ArrayList)voxels.clone(); //since all nodes are initially unvisted; beware of the shrinking list concurrency problem by ensuring Puzlock.voxels does not shrink
+        unvisitedVoxels = (ArrayList)voxels.clone(); //since all nodes are initially unvisted; beware of the shrinking list concurrency problem by ensuring Puzlock.voxels does not shrink
         unvisitedVoxels.remove(blocking); //remove the blocking voxel from the set of unvisited voxels
         //initialize the source vertex
         source.shortestDistanceFromSource = 0;
         source.previousVertex = null;
+        Voxel currentVoxel = source;
         //initialize the other vertices...
-        for (Voxel v: Puzlock.voxels){
+        for (Voxel v: voxels){
             //if current voxel is not equal to source (OR BLOCKING), initialize it with the default values
-            if (!v.equals(source)){
+            if (!v.getCoordinates().equals(source.getCoordinates())){
                 v.shortestDistanceFromSource = maxDistance;
                 v.previousVertex = null;
             }
@@ -35,31 +35,30 @@ public class ShortestPath {
                 unvisitedVoxels.remove(v); //remove the voxel below the blocking voxel from the set of unvisited voxels
             }
         }
-        Voxel currentVoxel = source;
         //1. Visit the unvisited vertex with the smallest know distance from the start vertex...
         while (!unvisitedVoxels.isEmpty()) {
-            Voxel leftNeighbour = Puzlock.getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, Puzlock.inputVoxelizedMesh, Puzlock.inputVoxelizedMeshSize, Puzlock.voxels); 
-            Voxel rightNeighbour = Puzlock.getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, Puzlock.inputVoxelizedMesh, Puzlock.inputVoxelizedMeshSize, Puzlock.voxels); 
-            Voxel upNeighbour = Puzlock.getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, Puzlock.inputVoxelizedMesh, Puzlock.inputVoxelizedMeshSize, Puzlock.voxels);
-            Voxel downNeighbour = Puzlock.getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, Puzlock.inputVoxelizedMesh, Puzlock.inputVoxelizedMeshSize, Puzlock.voxels);
-            Voxel forwardNeighbour = Puzlock.getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, Puzlock.inputVoxelizedMesh, Puzlock.inputVoxelizedMeshSize, Puzlock.voxels);
-            Voxel backwardNeighbour = Puzlock.getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, Puzlock.inputVoxelizedMesh, Puzlock.inputVoxelizedMeshSize, Puzlock.voxels);          
-            if ((leftNeighbour != null) && (leftNeighbour.value==1) && (!leftNeighbour.equals(blocking)) && (leftNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a left neighbour and it is not the blocking voxel and its new shortest distance is less than the old one
+            Voxel leftNeighbour = puzlock.getLeft(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, voxels); 
+            Voxel rightNeighbour = puzlock.getRight(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, voxels); 
+            Voxel upNeighbour = puzlock.getUp(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, voxels);
+            Voxel downNeighbour = puzlock.getDown(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, voxels);
+            Voxel forwardNeighbour = puzlock.getForward(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, voxels);
+            Voxel backwardNeighbour = puzlock.getBackward(currentVoxel.x, currentVoxel.y, currentVoxel.z, puzlock.inputVoxelizedMesh, puzlock.inputVoxelizedMeshSize, voxels);          
+            if ((leftNeighbour != null) && (!leftNeighbour.equals(blocking)) && (leftNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a left neighbour and it is not the blocking voxel and its new shortest distance is less than the old one
                 leftNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 leftNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
-            }if ((rightNeighbour != null) && (rightNeighbour.value==1) && (!rightNeighbour.equals(blocking)) && (rightNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a right neighbour and its new shortest distance is less than the old one
+            }if ((rightNeighbour != null) && (!rightNeighbour.equals(blocking)) && (rightNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a right neighbour and its new shortest distance is less than the old one
                 rightNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 rightNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
-            }if ((upNeighbour != null) && (upNeighbour.value==1) && (!upNeighbour.equals(blocking)) && (upNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is an up neighbour and its new shortest distance is less than the old one
+            }if ((upNeighbour != null) && (!upNeighbour.equals(blocking)) && (upNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is an up neighbour and its new shortest distance is less than the old one
                 upNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 upNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
-            }if ((downNeighbour != null) && (downNeighbour.value==1) && (!downNeighbour.equals(blocking)) && (downNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a down neighbour and its new shortest distance is less than the old one
+            }if ((downNeighbour != null) && (!downNeighbour.equals(blocking)) && (downNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a down neighbour and its new shortest distance is less than the old one
                 downNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 downNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
-            }if ((forwardNeighbour != null) && (forwardNeighbour.value==1) && (!forwardNeighbour.equals(blocking)) && (forwardNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a forward neighbour and its new shortest distance is less than the old one
+            }if ((forwardNeighbour != null) && (!forwardNeighbour.equals(blocking)) && (forwardNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a forward neighbour and its new shortest distance is less than the old one
                 forwardNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 forwardNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
-            }if ((backwardNeighbour != null) && (backwardNeighbour.value==1) && (!backwardNeighbour.equals(blocking)) && (backwardNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a backward neighbour and its new shortest distance is less than the old one
+            }if ((backwardNeighbour != null) && (!backwardNeighbour.equals(blocking)) && (backwardNeighbour.shortestDistanceFromSource > currentVoxel.shortestDistanceFromSource + 1)){ //if there is a backward neighbour and its new shortest distance is less than the old one
                 backwardNeighbour.shortestDistanceFromSource = currentVoxel.shortestDistanceFromSource + 1; //set its distance equal to the distance of the current voxel + distance to its neighbour   
                 backwardNeighbour.previousVertex = currentVoxel;//set its previous voxel to the current voxel
             }
@@ -67,7 +66,7 @@ public class ShortestPath {
             //now we must visited the first unvisited vertex with the smallest known distance from the start vertex...
             int smallestDistance = maxDistance; //stores the smallest known distance from the start vertex
             for (Voxel u: unvisitedVoxels) {
-                //if the current voxel has a smaller distance than the smallest distance from the start vertex, set if to the current
+                //if the current voxel has a smaller distance than the smallest distance from the start vertex, set it to the current
                 if (u.shortestDistanceFromSource < smallestDistance){
                     smallestDistance = u.shortestDistanceFromSource; //set voxel's shortest distance to the smallest distance
                     currentVoxel = u; //set voxel to the current voxel as we will now start from here

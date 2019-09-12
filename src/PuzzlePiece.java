@@ -1,9 +1,7 @@
 import java.util.ArrayList;
-
 /**
  * @author Nkosi Gumede
  */
-
 public class PuzzlePiece {
     ArrayList<Voxel> piece; //stores the set of voxels which are used to represent one piece
     ArrayList<Voxel> anchorVoxel; //stores the anchor voxels

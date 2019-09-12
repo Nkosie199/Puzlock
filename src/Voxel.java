@@ -1,7 +1,6 @@
 /**
  * @author Nkosi Gumede
  */
-
 public class Voxel {
     public String normalDirection;
     public double accessibilityValue;

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
-
 /**
  * @author Nkosi Gumede
  * this class implements 'Section 5.2: Extracting the Key Piece' of Song et al. (2012)
@@ -56,7 +55,8 @@ public class Puzlock {
         sc = new Scanner(System.in);
         N = voxels.size();
         System.out.println("Your input contains "+N+" voxels. Type in the number of puzzle pieces required: "); //eg. 8 pieces for a 4^3 voxel cube
-        K = sc.nextInt();
+//        K = sc.nextInt();
+        K = 8;
         m = N/K; //set m, required for establishing how many voxels to add/remove from the key piece
 //        System.out.println("Please set a Beta value ranging from 1 to 6:"); //eg. 8 pieces for a 4^3 voxel cube
 //        B = sc.nextInt();
@@ -91,14 +91,14 @@ public class Puzlock {
         //• Identify a set of exterior voxels that have exactly a pair of adjacent exterior faces (with one being on top). 
         //Require that these voxels can move out of the puzzle in one movement.
         int i=0;
-        ArrayList<Voxel> duplicates = new ArrayList<>();
+        ArrayList<Voxel> duplicates = new ArrayList<>(); //sotres voxels with more than one adjacent exterior face
         System.out.println("Top: "+top+". Size: "+inputVoxelizedMeshSize);
         for (Voxel v: voxels){
             if (v.y == top){ //i.e. if voxel is at the top
-                Voxel leftNeighbour = getLeft(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                Voxel rightNeighbour = getRight(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                Voxel forwardNeighbour = getForward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                Voxel backwardNeighbour = getBackward(v.x,v.y,v.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
+                Voxel leftNeighbour = getLeft(v.x,v.y,v.z, vMesh, inputVoxelizedMeshSize, voxels);
+                Voxel rightNeighbour = getRight(v.x,v.y,v.z, vMesh, inputVoxelizedMeshSize, voxels);
+                Voxel forwardNeighbour = getForward(v.x,v.y,v.z, vMesh, inputVoxelizedMeshSize, voxels);
+                Voxel backwardNeighbour = getBackward(v.x,v.y,v.z, vMesh, inputVoxelizedMeshSize, voxels);
                 if (leftNeighbour==null || leftNeighbour.value==0){ //and if the 3D array has 0 or null at the left co-ordinate of that voxel...                  
                     if (exteriorVoxels.contains(v)){ 
                         duplicates.add(v);
@@ -668,32 +668,44 @@ public class Puzlock {
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getRight(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
             for (Voxel v: setOfNeighbours){ //for each voxel in the set of neighbours...
@@ -708,32 +720,44 @@ public class Puzlock {
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour; 
                 setOfNeighbours.add(voxel1);
                 voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getLeft(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
             for (Voxel v: setOfNeighbours){ //for each voxel in the set of neighbours...
@@ -748,32 +772,44 @@ public class Puzlock {
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2); 
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getBackward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
             for (Voxel v: setOfNeighbours){ //for each voxel in the set of neighbours...
@@ -788,32 +824,44 @@ public class Puzlock {
                 voxel1 = leftNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (rightNeighbour != null){ //if there is a right neighbour
                 voxel1 = rightNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (upNeighbour != null){ //if there is an up neighbour
                 voxel1 = upNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (downNeighbour != null){ //if there is a down neighbour
                 voxel1 = downNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (forwardNeighbour != null){ //if there is a forward neighbour
                 voxel1 = forwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2);
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }if (backwardNeighbour != null){ //if there is a backward neighbour
                 voxel1 = backwardNeighbour;
                 setOfNeighbours.add(voxel1);
                 voxel2 = getForward(voxel1.x, voxel1.y, voxel1.z, inputVoxelizedMesh, inputVoxelizedMeshSize, voxels);
-                breadthFirstTraversal3(voxel1,voxel2); 
+                if ((voxel1!=seedVoxel) && (voxel2!=seedVoxel)){ //check that neither voxel1 nor voxel2 is the seed voxel
+                    breadthFirstTraversal3(voxel1,voxel2);
+                }
             }
             //now that we have all level n neighbours, we can proceed to level n+1...
             for (Voxel v: setOfNeighbours){ //for each voxel in the set of neighbours...

@@ -1,7 +1,6 @@
 /**
  * @author Nkosi Gumede
  */
-
 public class VoxelPair{
     private final Voxel voxel1; //blocking voxel
     private final Voxel voxel2; //blockee voxel

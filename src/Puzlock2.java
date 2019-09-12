@@ -633,5 +633,4 @@ public class Puzlock2 {
         /* • After the above steps, Pi+1 can fulfill the local interlocking requirement, but yet we have to expand it to m voxels and check whether Ri+1 is simply connected or not. 
         These are done in the same way as in Section 5.1. */
     }
-
 }
