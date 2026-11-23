@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Puzlock Viewer</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <aside class="panel">
+    <h1>Puzlock</h1>
+    <p class="subtitle">Recursive interlocking puzzles (Song, Fu &amp; Cohen-Or 2012)</p>
+
+    <form id="generate-form">
+      <label>Sample
+        <select id="sample"><option value="">— upload a file instead —</option></select>
+      </label>
+      <label>Or your own file (.grid, .stl, .obj)
+        <input id="file" type="file" accept=".grid,.txt,.stl,.obj">
+      </label>
+      <div class="row">
+        <label>Pieces <input id="pieces" type="number" min="2" max="2000" value="8"></label>
+        <label>Resolution <input id="resolution" type="number" min="2" max="64" value="16" title="Voxels along the longest side (meshes only)"></label>
+        <label>Seed <input id="seed" type="number" min="0" value="1"></label>
+      </div>
+      <button id="generate" type="submit">Generate</button>
+    </form>
+
+    <p id="status" class="status" role="status">Pick a sample or a file, then Generate.</p>
+
+    <section id="controls" hidden>
+      <label>Explode <input id="explode" type="range" min="0" max="1.5" step="0.01" value="0"></label>
+      <div class="row buttons">
+        <button id="step-back" type="button" title="Put the last removed piece back">◀ Put back</button>
+        <button id="step-forward" type="button" title="Remove the next piece">Remove ▶</button>
+      </div>
+      <p id="stage" class="stage"></p>
+      <ol id="piece-list" class="piece-list"></ol>
+    </section>
+  </aside>
+
+  <main id="scene" class="scene" aria-label="3D view of the puzzle; drag to rotate, scroll to zoom"></main>
+
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>
