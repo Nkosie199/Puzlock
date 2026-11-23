@@ -50,6 +50,8 @@ class PuzlockServerTest {
         assertEquals(200, stl.statusCode());
         assertTrue(StlReader.read(stl.body()).triangleCount() > 0);
         assertEquals(404, get("/api/results/" + id.group(1) + "/piece-9.grid").statusCode());
+        assertEquals(200, get("/api/results/" + id.group(1) + "/piece-1.stl?clearance=0.3").statusCode());
+        assertEquals(400, get("/api/results/" + id.group(1) + "/piece-1.stl?clearance=lots").statusCode());
     }
 
     @Test

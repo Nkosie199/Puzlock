@@ -51,6 +51,8 @@ class MainTest {
         assertEquals(Main.USAGE_ERROR, run("generate", "samples/cube4.grid"));
         assertTrue(text(err).contains("--pieces is required") && text(err).contains("Usage:"), text(err));
         assertEquals(Main.USAGE_ERROR, run("explode"));
+        assertEquals(Main.USAGE_ERROR, run("generate", "samples/cube4.grid", "--pieces", "4", "--clearance", "6"));
+        assertTrue(text(err).contains("--clearance must be at least 0"), text(err));
     }
 
     private int run(String... args) throws Exception {

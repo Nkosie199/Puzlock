@@ -90,6 +90,7 @@ java -jar target/puzlock.jar generate <file> --pieces <K> [options]
 | `--resolution N` | voxels along the longest side of a mesh (ignored for grids) | 16 |
 | `--seed S` | random seed; the same seed gives the same puzzle | 1 |
 | `--attempts A` | how many fresh attempts before giving up | 40 |
+| `--clearance C` | millimetres each STL piece shrinks on every side, so printed pieces fit together (gap between pieces = 2 × C) | 0.15 |
 | `--out DIR` | where to write the pieces | `out/<file name>` |
 
 Exit code 0 means a verified puzzle was written, 2 means no puzzle (the reason is printed),
@@ -133,7 +134,10 @@ backward, and so on. Piece 8 is what remains at the end.
 
 `out/cube4/` now holds, for each piece:
 
-- `piece-N.stl`: the piece as a printable mesh (each voxel is a 10 mm cube);
+- `piece-N.stl`: the piece as a printable mesh. Each voxel is a 10 mm cube and every surface is
+  pulled in by 0.15 mm, leaving a 0.3 mm gap between neighbouring pieces so they slide apart
+  after printing (change it with `--clearance`; 0.1–0.2 suits most FDM printers, use `0` for an
+  exact model);
 - `piece-N.grid`: the piece in the grid format below, in the same position as in the input;
 
 plus `puzzle.json` with everything (pieces, directions, verification) for other tools.
@@ -154,7 +158,7 @@ Open http://localhost:8080. In the left panel:
 5. Press **Remove ▶** repeatedly: each press slides the next piece out along its direction and the
    text tells you which piece can move now. **◀ Put back** reverses it.
 6. In the piece list, click a colour square to hide or show that piece; **STL** / **GRID**
-   download it.
+   download it. STL downloads use the **STL clearance per face** value above the list.
 
 Try the other samples too: `bunny.stl` (resolution 16, 8 pieces) and `sphere.stl` are meshes;
 `input-grid.grid` is a 32×32×32 grid saved by the 2019 renderer.

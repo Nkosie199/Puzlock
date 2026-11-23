@@ -17,7 +17,7 @@ resolved is in the table at the end.
 | `io` | `InputLoader` picks the reader: `GridFormat` (the 2019 renderer's text format), `StlReader` (binary + ASCII), `ObjReader`. Meshes go through `Voxeliser` and `SpeckFilter`. |
 | `algorithm` | Song's method. `PuzzleGenerator` → `PuzzleSearch` → `KeyPieceExtractor` / `NextPieceExtractor` → `PieceBuilder` (`BlockingStrategy`, `Anchors`, `FragmentAbsorber`, `PieceExpander`) on top of `Accessibility`, `Mobility`, `PathFinder`, `RemovableClosure`. |
 | `verify` | `InterlockingVerifier`: an independent check of the finished puzzle. |
-| `export` | `PuzzleExporter`: `piece-N.grid`, `piece-N.stl` (10 mm voxels), `puzzle.json`. |
+| `export` | `PuzzleExporter`: `piece-N.grid`, `piece-N.stl` (10 mm voxels shrunk by a printing clearance), `puzzle.json`. |
 | `cli` | `Main`: `generate` and `serve`. |
 | `web` | `PuzlockServer` (JDK `HttpServer`, 127.0.0.1 only) and the three.js viewer in `src/main/resources/web/`. |
 
@@ -165,6 +165,15 @@ Independent of the generator (it shares only `model`). For a puzzle P1 … Pₙ,
 3. no other group of pieces can move in any direction: exhaustively over all subsets when a stage
    has at most 16 pieces (bitmask contact tables), otherwise Song's local conditions (a) and (b)
    for every consecutive pair, which their appendix proves sufficient.
+
+## Printable STL pieces
+
+Printed parts come out slightly oversized, so pieces modelled to touch would jam. `StlWriter`
+shrinks each piece by a clearance (default 0.15 mm per face, so neighbouring pieces end up 0.3 mm
+apart). It splits every voxel along each axis into a clearance-wide slab on both sides and a core,
+keeps a sub-cell only when every voxel within the clearance of it belongs to the piece, and writes
+the surface of the kept sub-cells. That is exactly the piece eroded by the clearance, and as the
+boundary of a union of boxes it is always a closed surface, inner corners included.
 
 ## Viewer
 

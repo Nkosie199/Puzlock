@@ -12,7 +12,10 @@ import puzlock.io.GridFormat;
 import puzlock.model.Piece;
 import puzlock.model.Puzzle;
 
-/** {@code GET /api/results/<id>/piece-<n>.stl} or {@code .grid}: one piece of a generated puzzle. */
+/**
+ * {@code GET /api/results/<id>/piece-<n>.stl[?clearance=mm]} or {@code .grid}: one piece of a
+ * generated puzzle.
+ */
 final class PieceDownloadHandler implements HttpHandler {
     static final String PREFIX = "/api/results/";
     private static final Pattern PATH = Pattern.compile("/api/results/([0-9a-f-]+)/piece-(\\d+)\\.(stl|grid)");
@@ -21,6 +24,19 @@ final class PieceDownloadHandler implements HttpHandler {
 
     PieceDownloadHandler(ResultStore results) {
         this.results = results;
+    }
+
+    private static Optional<Float> clearance(HttpExchange exchange) {
+        String value = Http.query(exchange).get("clearance");
+        if (value == null) {
+            return Optional.of(StlWriter.DEFAULT_CLEARANCE_MM);
+        }
+        try {
+            float clearance = Float.parseFloat(value);
+            return clearance >= 0 && clearance < StlWriter.VOXEL_SIZE_MM / 2 ? Optional.of(clearance) : Optional.empty();
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -40,7 +56,13 @@ final class PieceDownloadHandler implements HttpHandler {
         String fileName = "piece-" + number + "." + match.group(3);
         exchange.getResponseHeaders().set("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         if (match.group(3).equals("stl")) {
-            Http.send(exchange, 200, "model/stl", StlWriter.write(puzzle.get().shape(), piece.voxels()));
+            Optional<Float> clearance = clearance(exchange);
+            if (clearance.isEmpty()) {
+                Http.sendError(exchange, 400, "clearance must be a number of millimetres from 0 to under "
+                        + StlWriter.VOXEL_SIZE_MM / 2);
+                return;
+            }
+            Http.send(exchange, 200, "model/stl", StlWriter.write(puzzle.get().shape(), piece.voxels(), clearance.get()));
         } else {
             byte[] grid = GridFormat.write(puzzle.get().shape(), piece.voxels()).getBytes(StandardCharsets.US_ASCII);
             Http.send(exchange, 200, "text/plain; charset=us-ascii", grid);

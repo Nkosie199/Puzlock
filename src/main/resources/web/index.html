@@ -43,6 +43,10 @@
         <button id="step-forward" type="button" title="Remove the next piece">Remove ▶</button>
       </div>
       <p id="stage" class="stage"></p>
+      <label>STL clearance per face (mm)
+        <input id="clearance" type="number" min="0" max="4.9" step="0.05" value="0.15"
+               title="Each piece shrinks by this much on every side so printed pieces fit together; 0.15 mm gives a 0.3 mm gap">
+      </label>
       <ol id="piece-list" class="piece-list"></ol>
     </section>
   </aside>

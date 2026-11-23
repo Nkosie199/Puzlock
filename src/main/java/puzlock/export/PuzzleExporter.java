@@ -11,13 +11,17 @@ import puzlock.io.LoadedInput;
 import puzlock.model.GridShape;
 import puzlock.model.Piece;
 
-/** Writes a result folder: piece-N.grid (renderer format), piece-N.stl (for printing) and puzzle.json. */
+/**
+ * Writes a result folder: piece-N.grid (renderer format), piece-N.stl (for printing, with the given
+ * clearance) and puzzle.json.
+ */
 public final class PuzzleExporter {
 
     private PuzzleExporter() {
     }
 
-    public static void export(Path folder, String inputName, LoadedInput input, GenerationOutcome outcome) throws IOException {
+    public static void export(Path folder, String inputName, LoadedInput input, GenerationOutcome outcome,
+                              float clearanceMm) throws IOException {
         Files.createDirectories(folder);
         Files.writeString(folder.resolve("puzzle.json"), PuzzleJson.write(inputName, input, outcome), StandardCharsets.UTF_8);
         if (outcome instanceof GenerationOutcome.Success success) {
@@ -26,7 +30,7 @@ public final class PuzzleExporter {
             for (int index = 0; index < pieces.size(); index++) {
                 String name = "piece-" + (index + 1);
                 Files.writeString(folder.resolve(name + ".grid"), GridFormat.write(shape, pieces.get(index).voxels()));
-                Files.write(folder.resolve(name + ".stl"), StlWriter.write(shape, pieces.get(index).voxels()));
+                Files.write(folder.resolve(name + ".stl"), StlWriter.write(shape, pieces.get(index).voxels(), clearanceMm));
             }
         }
     }

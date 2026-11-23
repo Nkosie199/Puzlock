@@ -156,9 +156,13 @@ function renderPieceList(result) {
     const links = document.createElement('span');
     for (const format of ['stl', 'grid']) {
       const link = document.createElement('a');
-      link.href = `/api/results/${result.resultId}/piece-${piece.number}.${format}`;
+      const path = `/api/results/${result.resultId}/piece-${piece.number}.${format}`;
+      link.href = path;
       link.textContent = format.toUpperCase();
       link.download = `piece-${piece.number}.${format}`;
+      if (format === 'stl') {
+        link.addEventListener('click', () => { link.href = `${path}?clearance=${encodeURIComponent(el('clearance').value)}`; });
+      }
       links.append(link);
     }
     item.append(swatch, label, links);

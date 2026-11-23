@@ -9,6 +9,7 @@ import puzlock.algorithm.GenerationOptions;
 import puzlock.algorithm.GenerationOutcome;
 import puzlock.algorithm.PuzzleGenerator;
 import puzlock.export.PuzzleExporter;
+import puzlock.export.StlWriter;
 import puzlock.io.InputLoader;
 import puzlock.io.InvalidInputException;
 import puzlock.io.LoadedInput;
@@ -25,7 +26,7 @@ public final class Main {
     private static final String USAGE = """
             Usage:
               java -jar puzlock.jar generate <input.grid|.stl|.obj> --pieces K [--resolution 16] [--seed 1]
-                                             [--attempts 40] [--out out/<input name>]
+                                             [--attempts 40] [--clearance 0.15] [--out out/<input name>]
               java -jar puzlock.jar serve [--port 8080]
             """;
 
@@ -61,6 +62,11 @@ public final class Main {
         if (pieces < 0) {
             throw new Arguments.UsageException("--pieces is required");
         }
+        float clearance = (float) arguments.doubleOption("clearance", StlWriter.DEFAULT_CLEARANCE_MM);
+        if (!(clearance >= 0 && clearance < StlWriter.VOXEL_SIZE_MM / 2)) {
+            throw new Arguments.UsageException("--clearance must be at least 0 and under "
+                    + StlWriter.VOXEL_SIZE_MM / 2 + " mm");
+        }
         if (!Files.isRegularFile(input)) {
             err.println("Input file not found: " + input);
             return NO_PUZZLE;
@@ -80,7 +86,7 @@ public final class Main {
                 .withAttempts(arguments.intOption("attempts", GenerationOptions.DEFAULT_ATTEMPTS));
         GenerationOutcome outcome = PuzzleGenerator.generate(loaded.grid(), options);
         Path folder = Path.of(arguments.option("out").orElse("out/" + baseName(input)));
-        PuzzleExporter.export(folder, input.getFileName().toString(), loaded, outcome);
+        PuzzleExporter.export(folder, input.getFileName().toString(), loaded, outcome, clearance);
         return report(outcome, folder, out, err);
     }
 

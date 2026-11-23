@@ -36,6 +36,18 @@ final class Arguments {
         return option(name).map(value -> parseInt(name, value)).orElse(fallback);
     }
 
+    double doubleOption(String name, double fallback) {
+        return option(name).map(value -> parseDouble(name, value)).orElse(fallback);
+    }
+
+    private static double parseDouble(String name, String value) {
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            throw new UsageException("--" + name + " must be a number, got '" + value + "'");
+        }
+    }
+
     private static int parseInt(String name, String value) {
         try {
             return Integer.parseInt(value);
